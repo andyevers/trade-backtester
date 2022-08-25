@@ -1,6 +1,4 @@
-import { Position, PositionType } from '@src/repository/PositionRepository'
-import EntityManager from '../repository/EntityManager'
-import { Trigger } from '../repository/TriggerRepository'
+import { EntityManager, Trigger, Position, PositionType } from '../repository'
 import { Candle } from '../types'
 import AccountService from './AccountService'
 

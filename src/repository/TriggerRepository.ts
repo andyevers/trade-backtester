@@ -1,4 +1,4 @@
-import { PositionTriggerLabel } from '@src/service/PositionService'
+import { PositionTriggerLabel } from '../service'
 import { Candle } from '../types'
 import Repository, { Entity } from './Repository'
 

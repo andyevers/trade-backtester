@@ -1,6 +1,5 @@
-import EntityManager from '@src/repository/EntityManager'
-import { PriceHistory, SymbolTimeframeKey, TimeframeType } from '@src/repository/PriceHistoryRepository'
-import { Candle } from '@src/types'
+import { SymbolTimeframeKey, EntityManager, TimeframeType, PriceHistory } from '../repository'
+import { Candle } from '../types'
 
 interface CandlesBySymbolTimeframe {
 	[key: SymbolTimeframeKey]: Candle[]

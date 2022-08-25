@@ -1,11 +1,14 @@
-import TriggerService from '@src/service/TriggerService'
-import { Candle } from '@src/types'
-import { Account } from '../repository/AccountRepository'
-import EntityManager from '../repository/EntityManager'
-import { Position, PositionCreateParams, PositionsById, PositionType } from '../repository/PositionRepository'
-import { TimeframeType } from '../repository/PriceHistoryRepository'
-import AccountService from '../service/AccountService'
-import PositionService from '../service/PositionService'
+import {
+	EntityManager,
+	TimeframeType,
+	Account,
+	PositionsById,
+	PositionType,
+	PositionCreateParams,
+	Position
+} from '../repository'
+import { PositionService, AccountService, TriggerService } from '../service'
+import { Candle } from '../types'
 import Timeline, { NewCandleData } from './Timeline'
 
 interface BrokerArgs {

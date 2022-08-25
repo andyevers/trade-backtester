@@ -1,10 +1,10 @@
-import EntityManager from '../repository/EntityManager'
 import {
-	Position,
-	PositionOrderDuration,
+	EntityManager,
+	PositionType,
 	PositionOrderType,
-	PositionType
-} from '../repository/PositionRepository'
+	PositionOrderDuration,
+	Position
+} from '../repository'
 import { Candle } from '../types'
 import PositionService from './PositionService'
 
