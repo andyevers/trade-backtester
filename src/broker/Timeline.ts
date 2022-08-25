@@ -56,17 +56,9 @@ export default class Timeline {
 	private readonly entityManager: EntityManager
 	private mainTimeframe: TimeframeType = 'day'
 
-	constructor(args?: TimelineArgs) {
-		const { entityManager = EntityManager.instance() } = args || {}
+	constructor(args: TimelineArgs) {
+		const { entityManager } = args
 		this.entityManager = entityManager
-	}
-
-	private static _instance: Timeline | null = null
-	public static instance() {
-		if (!this._instance) {
-			this._instance = new Timeline()
-		}
-		return this._instance
 	}
 
 	/**

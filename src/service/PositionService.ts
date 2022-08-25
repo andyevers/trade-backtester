@@ -32,8 +32,8 @@ export type PositionTriggerLabel =
 export default class PositionService {
 	private readonly entityManager: EntityManager
 
-	constructor(args?: PositionServiceArgs) {
-		const { entityManager = EntityManager.instance() } = args || {}
+	constructor(args: PositionServiceArgs) {
+		const { entityManager } = args
 		this.entityManager = entityManager
 	}
 

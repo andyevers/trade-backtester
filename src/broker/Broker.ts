@@ -58,13 +58,8 @@ export default class Broker {
 	private readonly timeline: Timeline
 	private readonly triggerService: TriggerService
 
-	constructor(args?: BrokerArgs) {
-		const {
-			entityManager = EntityManager.instance(),
-			timeline = Timeline.instance(),
-			accountService = new AccountService(),
-			triggerService = new TriggerService()
-		} = args || {}
+	constructor(args: BrokerArgs) {
+		const { entityManager, timeline, accountService, triggerService } = args
 		this.entityManager = entityManager
 		this.accountService = accountService
 		this.timeline = timeline

@@ -15,8 +15,8 @@ export default class TriggerService {
 	private readonly entityManager: EntityManager
 	private readonly accountService: AccountService
 
-	constructor(args?: TriggerServiceArgs) {
-		const { entityManager = EntityManager.instance(), accountService = new AccountService() } = args || {}
+	constructor(args: TriggerServiceArgs) {
+		const { entityManager, accountService } = args
 		this.entityManager = entityManager
 		this.accountService = accountService
 	}

@@ -39,9 +39,8 @@ export default class AccountService {
 	private readonly entityManager: EntityManager
 	private readonly positionService: PositionService
 
-	constructor(args?: AccountServiceArgs) {
-		const { entityManager = EntityManager.instance(), positionService = new PositionService() } =
-			args || {}
+	constructor(args: AccountServiceArgs) {
+		const { entityManager, positionService } = args
 		this.entityManager = entityManager
 		this.positionService = positionService
 	}

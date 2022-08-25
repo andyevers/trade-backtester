@@ -19,8 +19,6 @@ export default class EntityManager {
 		[K in keyof RepositoriesByName]: RepositoriesByName[K]
 	}
 
-	private static _instance: EntityManager | null = null
-
 	constructor(args?: EntityManagerArgs) {
 		const {
 			repositories = {
@@ -31,13 +29,6 @@ export default class EntityManager {
 			}
 		} = args || {}
 		this.repositories = repositories
-	}
-
-	public static instance(): EntityManager {
-		if (!this._instance) {
-			this._instance = new EntityManager()
-		}
-		return this._instance
 	}
 
 	public getRepository<T extends keyof RepositoriesByName>(repositoryName: T): RepositoriesByName[T] {
