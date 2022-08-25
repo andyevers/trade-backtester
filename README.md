@@ -1,8 +1,8 @@
-# TradeShark Backtester
+# Trade Backtester
 
-## Todo
+Create trading strategies and run backtests.
 
--   DO NOT MODIFY RETURNED OBJECTS such as accounts, candles, positions, etc... this will alter the object stored in the broker. This is because returning references to already created objects is much faster than cloning every object.
+-   **DO NOT MODIFY RETURNED OBJECTS** such as accounts, candles, positions, etc... this will alter the object stored in the broker. This is because returning references to already created objects is much faster than cloning every object.
 
 ## Additional Timeframes
 
