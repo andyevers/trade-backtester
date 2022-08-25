@@ -8,7 +8,7 @@ import PositionService from '@src/service/PositionService'
 import TriggerService from '@src/service/TriggerService'
 import { Candle } from '@src/types'
 
-describe('AccountService', () => {
+describe('Broker', () => {
 	let entityManager: EntityManager
 	let timeline: Timeline
 	let positionService: PositionService

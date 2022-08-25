@@ -2,11 +2,11 @@ import { Trigger, TriggerType } from '@src/repository/TriggerRepository'
 import EntityManager from '../repository/EntityManager'
 import { Position, PositionType } from '../repository/PositionRepository'
 
-interface PositionServiceArgs {
+export interface PositionServiceArgs {
 	entityManager: EntityManager
 }
 
-interface IPositionTriggerParams {
+export interface PositionTriggerParams {
 	positionId: number
 	symbol: string
 	price: number
@@ -15,7 +15,7 @@ interface IPositionTriggerParams {
 	expirationTime?: number | null
 }
 
-export interface ITrailStopParams extends IPositionTriggerParams {
+export interface TrailStopParams extends PositionTriggerParams {
 	trailAmount: number
 }
 
@@ -59,7 +59,7 @@ export default class PositionService {
 
 	public setPositionTrigger(
 		label: PositionTriggerLabel,
-		params: IPositionTriggerParams
+		params: PositionTriggerParams
 	): Trigger<'position'> {
 		const {
 			price,
@@ -82,7 +82,7 @@ export default class PositionService {
 		}) as Trigger<'position'>
 	}
 
-	public setTrailingStop(params: ITrailStopParams): void {
+	public setTrailingStop(params: TrailStopParams): void {
 		const { price, trailAmount, positionId } = params
 		const positionRepository = this.entityManager.getRepository('position')
 		const position = positionRepository.get(positionId) as Position

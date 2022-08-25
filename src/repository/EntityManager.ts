@@ -3,7 +3,7 @@ import PositionRepository from './PositionRepository'
 import PriceHistoryRepository from './PriceHistoryRepository'
 import TriggerRepository from './TriggerRepository'
 
-interface EntityManagerArgs {
+export interface EntityManagerArgs {
 	repositories: RepositoriesByName
 }
 
