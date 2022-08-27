@@ -12,6 +12,6 @@ export interface CandleBySymbol {
 }
 
 export interface Strategy {
-	init(): void
-	next(streamResponse: CandleBySymbol): void
+	init(client: any): void
+	next(candleBySymbol: CandleBySymbol): void
 }

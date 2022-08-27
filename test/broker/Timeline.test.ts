@@ -240,8 +240,6 @@ describe('Timeline', () => {
 			})
 		)
 
-		console.log(indexesMain)
-
 		// past candles remain on last index, future candles -1, main candles increment with current index
 		expect(indexesPast.every((index) => index === priceHistoryPast.candles.length - 1)).toBe(true)
 		expect(indexesFuture.every((index) => index === -1)).toBe(true)

@@ -11,7 +11,7 @@ import { PositionService, AccountService, TriggerService } from '../service'
 import { Candle } from '../types'
 import Timeline, { NewCandleData } from './Timeline'
 
-interface BrokerArgs {
+export interface BrokerArgs {
 	entityManager: EntityManager
 	timeline: Timeline
 	positionService: PositionService
@@ -19,18 +19,18 @@ interface BrokerArgs {
 	triggerService: TriggerService
 }
 
-interface GetCandlesParams {
+export interface GetCandlesParams {
 	startTime?: number
 	endTime?: number
 	symbol: string
 	timeframe: TimeframeType
 }
 
-interface AccountWithPositions extends Account {
+export interface AccountWithPositions extends Account {
 	positionsById: PositionsById
 }
 
-interface CloseOrderRequestParams {
+export interface CloseOrderRequestParams {
 	accountId: number
 	positionId?: number
 	symbol?: string
@@ -38,18 +38,19 @@ interface CloseOrderRequestParams {
 	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
 }
 
-interface HasPositionsParams {
+export interface HasPositionsParams {
 	accountId: number
 	symbol?: string
 	type?: PositionType
 	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
 }
 
-interface PlaceOrderBrokerParams extends Omit<PositionCreateParams, 'orderTime' | 'orderPrice' | 'status'> {
+export interface PlaceOrderBrokerParams
+	extends Omit<PositionCreateParams, 'orderTime' | 'orderPrice' | 'status'> {
 	orderPrice?: number
 }
 
-interface Quote {
+export interface Quote {
 	bid: number
 	ask: number
 	time: number
@@ -150,6 +151,7 @@ export default class Broker {
 		return closedOrders
 	}
 
+	// TODO: Remove this method.
 	public hasPositions(params: HasPositionsParams): boolean {
 		const { accountId, status, type, symbol } = params
 		const positionRepository = this.entityManager.getRepository('position')

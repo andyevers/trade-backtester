@@ -1,4 +1,10 @@
-import { SymbolTimeframeKey, EntityManager, TimeframeType, PriceHistory } from '../repository'
+import {
+	SymbolTimeframeKey,
+	EntityManager,
+	TimeframeType,
+	PriceHistory,
+	GetIndexAtTimeParams
+} from '../repository'
 import { Candle } from '../types'
 
 interface CandlesBySymbolTimeframe {
@@ -11,12 +17,6 @@ interface TimelineArgs {
 	entityManager: EntityManager
 }
 
-interface GetIndexAtTimeParams {
-	time: number
-	symbol: string
-	timeframe: TimeframeType
-}
-
 export interface NewCandleData {
 	candle: Candle
 	symbol: string
@@ -24,6 +24,7 @@ export interface NewCandleData {
 
 type NewCandleCallback = (data: NewCandleData) => void
 
+// TODO: Move storing of candles to PriceHistoryRepository
 export default class Timeline {
 	private time: number = 0
 	private timelineIndex: number = 0
@@ -31,13 +32,6 @@ export default class Timeline {
 
 	private currentIndexes: {
 		[stfKey: SymbolTimeframeKey]: number
-	} = {}
-
-	// this only works for times that have been iterated using setTime
-	private indexByTimeByStfKey: {
-		[stfKey: SymbolTimeframeKey]: {
-			[time: number]: number
-		}
 	} = {}
 
 	private readonly candles: {
@@ -115,10 +109,9 @@ export default class Timeline {
 	 */
 	public getIndexAtTime(params: GetIndexAtTimeParams): number | null {
 		const { symbol, time, timeframe } = params
-		const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
-		const symbolTimeframeTimes = this.indexByTimeByStfKey[stfKey]
-
-		return symbolTimeframeTimes ? symbolTimeframeTimes[time] : null
+		if (time > this.time) return -1
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		return priceHistoryRepository.getIndexNearTime({ symbol, time, timeframe })
 	}
 
 	/**
@@ -173,6 +166,8 @@ export default class Timeline {
 			throw new Error('You cannot go back in time. use reset() to start over')
 		}
 
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+
 		const bucketPast = this.candles.past
 		const bucketPresent = this.candles.present
 		const bucketAll = this.candles.all
@@ -185,15 +180,20 @@ export default class Timeline {
 
 			let nextIndex = this.currentIndexes[stfKey] + 1
 
-			// if canldes are done iterating, use last index for current index and continue
-			if (nextIndex >= candlesAll.length) {
-				this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
-				continue
-			}
-
 			const candlesPast = bucketPast[stfKey]
 			const candlesPresent = (bucketPresent[stfKey] = [] as Candle[])
 			const [symbol, timeframe] = stfKey.split('_')
+
+			// if canldes are done iterating, use last index for current index and continue
+			if (nextIndex >= candlesAll.length) {
+				priceHistoryRepository.setIndexAtTime({
+					symbol,
+					time: time,
+					timeframe: timeframe as TimeframeType,
+					index: this.currentIndexes[stfKey]
+				})
+				continue
+			}
 
 			// the current candle or combined candle if sub-timeframe
 			const candleGenerator = this.candleGenerator(candlesAll[nextIndex])
@@ -209,7 +209,12 @@ export default class Timeline {
 			}
 
 			// used for getCandles startTime and endTime
-			this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
+			priceHistoryRepository.setIndexAtTime({
+				symbol,
+				time: time,
+				timeframe: timeframe as TimeframeType,
+				index: this.currentIndexes[stfKey]
+			})
 
 			const builtCandle = candleGenerator.return().value as Candle
 
@@ -244,8 +249,6 @@ export default class Timeline {
 
 		this.candles.present = {}
 		this.candles.past = {}
-
-		this.indexByTimeByStfKey = {}
 
 		if (keepCandlesAndTimeline) {
 			this.candles.all = this.getAllCandlesClone()
@@ -289,7 +292,6 @@ export default class Timeline {
 			this.candles.present[symbolTimeframeKey] = []
 
 			this.currentIndexes[symbolTimeframeKey] = -1
-			this.indexByTimeByStfKey[symbolTimeframeKey] = {}
 		}
 
 		// prevents the original object from being manipulated.

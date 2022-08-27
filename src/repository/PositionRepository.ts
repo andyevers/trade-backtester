@@ -313,6 +313,14 @@ export default class PositionRepository extends Repository<Position<PositionStat
 		return position
 	}
 
+	public override import(position: Position): Position {
+		const { accountId, symbol } = position
+		super.import(position)
+		this.ensureSymbolBlocks(accountId, symbol)
+		this.setMapBlocks(position)
+		return position
+	}
+
 	public override remove(positionId: number) {
 		const position = this.get(positionId)
 		if (!position) return

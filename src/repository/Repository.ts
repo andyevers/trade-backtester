@@ -33,15 +33,28 @@ export default abstract class Repository<T extends Entity> {
 		return entity as T
 	}
 
+	public import(entity: T): T {
+		if (this.entitiesById[entity.id]) {
+			throw new Error(
+				`Entity with id ${entity.id} already exists in repository ${this.constructor.name}`
+			)
+		}
+		const id = entity.id + 1
+		this.entities.add(entity as T)
+		this.entitiesById[id] = entity as T
+		return entity
+	}
+
 	public remove(id: number): void {
 		this.entities.delete(this.entitiesById[id])
 		delete this.entitiesById[id]
 	}
 
-	public update(id: number, params: Omit<Partial<T>, 'id'>): T | null {
+	public update(id: number, params: Omit<Partial<T> | T, 'id'>): T | null {
 		const entity = this.entitiesById[id] || null
 		if (!entity) return null
 		for (const key in params) {
+			if (key === 'id') continue
 			entity[key as keyof T] = params[key as keyof typeof params] as any
 		}
 		return entity
