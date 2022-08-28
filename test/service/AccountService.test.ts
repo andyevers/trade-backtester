@@ -1,6 +1,5 @@
 import { Account } from '@src/repository/AccountRepository'
 import EntityManager from '@src/repository/EntityManager'
-// import AccountService from '@src/service/AccountService'
 import PositionService from '@src/service/PositionService'
 import { Candle } from '@src/types'
 import { AccountService } from '@src/service'

@@ -139,9 +139,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 
 	public getBySymbolTimeframe(symbol: string, timeframe: TimeframeType): PriceHistory {
 		const priceHistory = this.symbolTimeframes[this.getKey(symbol, timeframe)]
-		// if (!priceHistory) {
-		// 	throw new Error(`${symbol} ${timeframe} is not a registered symbol timeframe`)
-		// }
 		return priceHistory || null
 	}
 

@@ -1,4 +1,4 @@
-import { HasPositionsParams } from './broker'
+import { HasPositionsParams } from '../broker'
 import {
 	Account,
 	Entity,
@@ -10,35 +10,18 @@ import {
 	PriceHistory,
 	RepositoriesByName,
 	TimeframeType
-} from './repository'
-import { CloseOrderParams, PlaceOrderParams } from './service'
-import { Candle } from './types'
+} from '../repository'
+import { CloseOrderParams, PlaceOrderParams } from '../service'
+import { Candle } from '../types'
 
-interface ResponseStatus {
-	status: 'ok' | 'error'
-	httpCode: number
-	message: string
-}
-
-interface BaseClientInterface {
-	getAccount(): Account
-	getPosition(positionId: number): Position
-	getPositions(filters: PositionsByIdLookupFilters): Promise<PositionsById>
-
-	fetchAccount(): Promise<Account>
-	fetchPriceHistory(): Promise<PriceHistory>
-	placeOrder(params: PlaceOrderParams): void
-	// readonly cachedFetchData: any
-}
-
-interface IBaseClientArgs {
+export interface BaseClientArgs {
 	entityManager?: EntityManager
 }
 export default abstract class BaseClient {
 	private readonly entityManager: EntityManager
 	private readonly accountId: number
 
-	constructor(args?: IBaseClientArgs) {
+	constructor(args?: BaseClientArgs) {
 		this.entityManager = args?.entityManager || new EntityManager()
 		// TODO: get accountId from entityManager
 		this.accountId = 1
@@ -52,10 +35,16 @@ export default abstract class BaseClient {
 	/**
 	 * Fetches priceHistory from the server and caches it.
 	 */
-	public abstract fetchPriceHistory(): Promise<PriceHistory>
+	public abstract fetchPriceHistory(params: GetCandlesParams): Promise<PriceHistory>
 
+	/**
+	 * Sends order to the server. Does not wait for response.
+	 */
 	public abstract placeOrder(params: PlaceOrderParams): void
 
+	/**
+	 * Sends close order to the server. Does not wait for response.
+	 */
 	public abstract closeOrder(params: CloseOrderParams): void
 
 	private cacheEntity<T extends keyof RepositoriesByName>(
@@ -157,5 +146,17 @@ export default abstract class BaseClient {
 		}
 
 		return candles.slice(indexFirstCandle, indexLastCandle + 1)
+	}
+
+	public getPriceHistory(params: GetCandlesParams): PriceHistory {
+		const { symbol, timeframe } = params
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		const priceHistory = priceHistoryRepository.getBySymbolTimeframe(symbol, timeframe)
+		return {
+			id: priceHistory.id,
+			symbol,
+			timeframe,
+			candles: this.getCandles(params)
+		}
 	}
 }
