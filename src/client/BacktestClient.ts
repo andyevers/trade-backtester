@@ -3,22 +3,16 @@ import { PlaceOrderParams, CloseOrderParams } from '@src/service'
 import BaseClient, { BaseClientArgs } from './BaseClient'
 
 class BacktestClient extends BaseClient {
-	constructor(args?: BaseClientArgs) {
+	constructor(args: BaseClientArgs) {
 		super(args)
 	}
 
-	public async fetchAccount(): Promise<Account> {
-		return new Promise((resolve) => {
-			resolve(this.getAccount())
-		})
+	public fetchAccount(): void {
+		//TODO: Make this get account and fire EventBus event.
 	}
 
-	public async fetchPriceHistory(params: GetCandlesParams): Promise<PriceHistory> {
-		return new Promise((resolve, reject) => {
-			const priceHistory = this.getPriceHistory(params)
-			if (priceHistory) resolve(priceHistory)
-			else reject('Price history not found')
-		})
+	public fetchPriceHistory(params: GetCandlesParams): void {
+		//TODO: Make this get price history and fire EventBus event.
 	}
 
 	public placeOrder(params: PlaceOrderParams): void {

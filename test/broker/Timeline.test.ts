@@ -1,17 +1,17 @@
 import Timeline from '@src/broker/Timeline'
 import EntityManager from '@src/repository/EntityManager'
-import { PriceHistory, TimeframeType } from '@src/repository/PriceHistoryRepository'
+import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import { Candle } from '@src/types'
 
 describe('Timeline', () => {
 	let entityManager: EntityManager
 	let timeline: Timeline
 
-	let priceHistoryDay: PriceHistory
-	let priceHistoryHour4: PriceHistory
-	let priceHistoryHour4GM: PriceHistory
-	let priceHistoryPast: PriceHistory
-	let priceHistoryFuture: PriceHistory
+	let priceHistoryDay: PriceHistoryCreateParams
+	let priceHistoryHour4: PriceHistoryCreateParams
+	let priceHistoryHour4GM: PriceHistoryCreateParams
+	let priceHistoryPast: PriceHistoryCreateParams
+	let priceHistoryFuture: PriceHistoryCreateParams
 
 	// 2022-08-20
 	const MS_TIME_START_AAPL = 1661002943915
@@ -36,11 +36,13 @@ describe('Timeline', () => {
 
 	beforeEach(() => {
 		entityManager = new EntityManager()
-		timeline = new Timeline({ entityManager })
+		timeline = new Timeline()
 
 		const priceHistoryRepository = entityManager.getRepository('priceHistory')
 
-		priceHistoryDay = priceHistoryRepository.create({
+		const priceHistoryArr: PriceHistoryCreateParams[] = []
+
+		priceHistoryDay = {
 			symbol: 'AAPL',
 			timeframe: 'day',
 			candles: candles('day', MS_TIME_START_AAPL, [
@@ -52,9 +54,23 @@ describe('Timeline', () => {
 				{ open: 3, high: 5, low: 2, close: 4 },
 				{ open: 2, high: 4, low: 1, close: 3 }
 			])
-		})
+		}
+		// priceHistoryDay = priceHistoryRepository.create({
+		// 	symbol: 'AAPL',
+		// 	timeframe: 'day',
+		// 	candles: candles('day', MS_TIME_START_AAPL, [
+		// 		{ open: 2, high: 4, low: 1, close: 3 },
+		// 		{ open: 3, high: 5, low: 2, close: 4 },
+		// 		{ open: 4, high: 6, low: 3, close: 5 },
+		// 		{ open: 5, high: 7, low: 4, close: 6 },
+		// 		{ open: 4, high: 6, low: 3, close: 5 },
+		// 		{ open: 3, high: 5, low: 2, close: 4 },
+		// 		{ open: 2, high: 4, low: 1, close: 3 }
+		// 	])
+		// })
 
-		priceHistoryHour4 = priceHistoryRepository.create({
+		// priceHistoryHour4 = priceHistoryRepository.create({
+		priceHistoryHour4 = {
 			symbol: 'AAPL',
 			timeframe: 'hour4',
 			candles: candles('hour4', MS_TIME_START_AAPL, [
@@ -73,23 +89,25 @@ describe('Timeline', () => {
 				{ open: 5.0, high: 7.0, low: 3.0, close: 5.0 },
 				{ open: 4.75, high: 6.75, low: 2.75, close: 4.75 }
 			])
-		})
-		priceHistoryHour4GM = priceHistoryRepository.create({
+		}
+		// priceHistoryHour4GM = priceHistoryRepository.create({
+		priceHistoryHour4GM = {
 			symbol: 'GM',
 			timeframe: 'hour4',
 			candles: candles('hour4', MS_TIME_START_GM, [
 				{ open: 2.25, high: 4.25, low: 1.25, close: 3.25 },
 				{ open: 2.5, high: 4.5, low: 1.5, close: 3.5 },
 				{ open: 2.75, high: 4.75, low: 1.75, close: 3.75 },
-				{ open: 3.0, high: 5.0, low: 2.0, close: 4.0 },
+				{ open: 3.0, high: 5.9, low: 2.0, close: 4.0 },
 				{ open: 3.25, high: 5.25, low: 2.25, close: 4.25 },
 				{ open: 3.5, high: 5.5, low: 2.5, close: 4.5 },
 				{ open: 3.75, high: 5.75, low: 2.75, close: 4.75 },
 				{ open: 4.0, high: 6.0, low: 3.0, close: 5.0 }
 			])
-		})
+		}
 
-		priceHistoryPast = priceHistoryRepository.create({
+		// priceHistoryPast = priceHistoryRepository.create({
+		priceHistoryPast = {
 			symbol: 'AAL',
 			timeframe: 'day',
 			candles: candles('day', 0, [
@@ -102,9 +120,10 @@ describe('Timeline', () => {
 				{ open: 3.75, high: 5.75, low: 2.75, close: 4.75 },
 				{ open: 4.0, high: 6.0, low: 3.0, close: 5.0 }
 			])
-		})
+		}
 
-		priceHistoryFuture = priceHistoryRepository.create({
+		// priceHistoryFuture = priceHistoryRepository.create({
+		priceHistoryFuture = {
 			symbol: 'AAL',
 			timeframe: 'hour4',
 			candles: candles('day', 9999999999999, [
@@ -117,19 +136,41 @@ describe('Timeline', () => {
 				{ open: 3.75, high: 5.75, low: 2.75, close: 4.75 },
 				{ open: 4.0, high: 6.0, low: 3.0, close: 5.0 }
 			])
+		}
+		priceHistoryArr.push(
+			priceHistoryDay,
+			priceHistoryHour4,
+			priceHistoryHour4GM,
+			priceHistoryPast,
+			priceHistoryFuture
+		)
+
+		timeline.setPriceHistory(priceHistoryArr)
+		timeline.initFromPriceHistory('AAPL', 'day', {
+			onNewCandle(data) {
+				const { candle, symbol, timeframe } = data
+				const priceHistoryRepository = entityManager.getRepository('priceHistory')
+				priceHistoryRepository.addCandle({ candle, symbol, timeframe })
+			}
 		})
 
-		timeline.initFromPriceHistoryId(priceHistoryDay.id)
+		// timeline.setPriceHistory(priceHistoryArr)
+		// timeline.initFromPriceHistoryId(priceHistoryDay.id)
 	})
 
 	test('getCandles, next, setTime', () => {
+		//TODO: Move this test to BacktestClient
+		expect(true).toBe(true)
 		const candlesDay = priceHistoryDay.candles
 		const candlesHour4 = priceHistoryHour4.candles
+		const priceHistoryRepository = entityManager.getRepository('priceHistory')
 
-		const getCandlesPastDay = () => timeline.getCandles('AAPL', 'day', 'past')
-		const getCandlesPastHour4 = () => timeline.getCandles('AAPL', 'hour4', 'past')
-		const getCandlesPresentDay = () => timeline.getCandles('AAPL', 'day', 'present')
-		const getCandlesPresentHour4 = () => timeline.getCandles('AAPL', 'hour4', 'present')
+		const getCandlesPastDay = () =>
+			priceHistoryRepository.getCandles({ symbol: 'AAPL', timeframe: 'day' })
+		const getCandlesPastHour4 = () =>
+			priceHistoryRepository.getCandles({ symbol: 'AAPL', timeframe: 'hour4' })
+		const getCandlesPresentDay = () => timeline.getNextCandles('AAPL', 'day')
+		const getCandlesPresentHour4 = () => timeline.getNextCandles('AAPL', 'hour4')
 
 		// assert current candles at start time
 		expect(getCandlesPastDay()).toEqual([candlesDay[0]])
@@ -137,7 +178,13 @@ describe('Timeline', () => {
 		expect(getCandlesPresentDay()).toEqual([])
 		expect(getCandlesPresentHour4()).toEqual([])
 
-		timeline.next()
+		timeline.next({
+			onNewCandle(data) {
+				const { candle, symbol, timeframe } = data
+				const priceHistoryRepository = entityManager.getRepository('priceHistory')
+				priceHistoryRepository.addCandle({ candle, symbol, timeframe })
+			}
+		})
 
 		// candles at index 1
 		expect(getCandlesPastDay()).toEqual([candlesDay[0], candlesDay[1]])
@@ -150,6 +197,7 @@ describe('Timeline', () => {
 			candlesHour4[5],
 			candlesHour4[6]
 		])
+
 		expect(getCandlesPresentDay()).toEqual([candlesDay[1]])
 		// 6 candles because 6 hour4 candles is 1 day candle.
 		expect(getCandlesPresentHour4()).toEqual([
@@ -197,7 +245,7 @@ describe('Timeline', () => {
 
 		timeline.next()
 
-		const candlesPresentH4 = timeline.getCandles('GM', 'hour4', 'present')
+		const candlesPresentH4 = timeline.getNextCandles('GM', 'hour4')
 		const candleBuiltH4: Candle = {
 			close: candlesPresentH4[candlesPresentH4.length - 1].close,
 			high: candlesPresentH4.reduce((high, c) => Math.max(c.high, high), candlesPresentH4[0].high),
@@ -263,10 +311,10 @@ describe('Timeline', () => {
 	test('reset', () => {
 		// reset and keep candles
 		timeline.reset(true)
-		expect(timeline.getCandles('AAPL', 'day', 'all')).toEqual(priceHistoryDay.candles)
+		expect(timeline.getAllCandles('AAPL', 'day')).toEqual(priceHistoryDay.candles)
 
 		// reset and clear candles
 		timeline.reset(false)
-		expect(timeline.getCandles('AAPL', 'day', 'all')).toEqual([])
+		expect(timeline.getAllCandles('AAPL', 'day')).toEqual([])
 	})
 })

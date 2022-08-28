@@ -1,6 +1,7 @@
 import { HasPositionsParams } from '../broker'
 import {
 	Account,
+	AddCandleParams,
 	Entity,
 	EntityManager,
 	GetCandlesParams,
@@ -15,27 +16,31 @@ import { CloseOrderParams, PlaceOrderParams } from '../service'
 import { Candle } from '../types'
 
 export interface BaseClientArgs {
-	entityManager?: EntityManager
+	entityManager: EntityManager
 }
-export default abstract class BaseClient {
-	private readonly entityManager: EntityManager
-	private readonly accountId: number
 
-	constructor(args?: BaseClientArgs) {
-		this.entityManager = args?.entityManager || new EntityManager()
+// TODO: Add EventBus to capture response from async methods.
+
+export default abstract class BaseClient {
+	private readonly accountId: number
+	private readonly entityManager: EntityManager
+
+	constructor(args: BaseClientArgs) {
 		// TODO: get accountId from entityManager
+		const { entityManager } = args
+		this.entityManager = entityManager
 		this.accountId = 1
 	}
 
 	/**
 	 * Fetches account from the server and caches it.
 	 */
-	public abstract fetchAccount(): Promise<Account>
+	public abstract fetchAccount(): void
 
 	/**
 	 * Fetches priceHistory from the server and caches it.
 	 */
-	public abstract fetchPriceHistory(params: GetCandlesParams): Promise<PriceHistory>
+	public abstract fetchPriceHistory(params: GetCandlesParams): void
 
 	/**
 	 * Sends order to the server. Does not wait for response.
@@ -47,6 +52,9 @@ export default abstract class BaseClient {
 	 */
 	public abstract closeOrder(params: CloseOrderParams): void
 
+	/**
+	 * Stores an entity in a repository.
+	 */
 	private cacheEntity<T extends keyof RepositoriesByName>(
 		repositoryName: T,
 		entity: ReturnType<RepositoriesByName[T]['create']>
@@ -161,12 +169,11 @@ export default abstract class BaseClient {
 		}
 	}
 
-	// TODO: make this push candles to priceHistoryRepository
-	public addCandles(params: any): void {
-		const { symbol, timeframe, candles } = params
+	public cacheCandle(params: AddCandleParams): void {
+		const { symbol, timeframe, candle } = params
 		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
 		const priceHistory = priceHistoryRepository.getBySymbolTimeframe(symbol, timeframe)
 		if (!priceHistory) return
-		priceHistoryRepository.addCandles({ symbol, timeframe, candles })
+		priceHistoryRepository.addCandle({ symbol, timeframe, candle })
 	}
 }

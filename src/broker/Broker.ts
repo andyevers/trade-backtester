@@ -5,7 +5,9 @@ import {
 	PositionsById,
 	PositionType,
 	PositionCreateParams,
-	Position
+	Position,
+	PriceHistoryCreateParams,
+	AccountCreateParams
 } from '../repository'
 import { PositionService, AccountService, TriggerService } from '../service'
 import { Candle } from '../types'
@@ -56,6 +58,13 @@ export interface Quote {
 	time: number
 }
 
+export interface BrokerInitParams {
+	priceHistory: PriceHistoryCreateParams
+	priceHistoryAddional?: PriceHistoryCreateParams[]
+	accounts: AccountCreateParams[]
+	startTime: number
+}
+
 export default class Broker {
 	private readonly entityManager: EntityManager
 	private readonly accountService: AccountService
@@ -70,10 +79,38 @@ export default class Broker {
 		this.triggerService = triggerService
 	}
 
+	public init(params: BrokerInitParams): void {
+		const { priceHistory, priceHistoryAddional = [], accounts, startTime } = params
+
+		if (startTime < priceHistory.candles[0].time) {
+			throw new Error('Start time cannot be before the first candle time in price history')
+		}
+
+		const accountRepository = this.entityManager.getRepository('account')
+
+		for (const account of accounts) {
+			accountRepository.create(account)
+		}
+
+		this.timeline.setPriceHistory([...priceHistoryAddional, priceHistory])
+		this.timeline.initFromPriceHistory(priceHistory.symbol, priceHistory.timeframe, {
+			onNewCandle: this.onNewCandle,
+			onNewCandleBuilt: this.onNewCandleBuilt
+		})
+
+		this.timeline.setStartTime(startTime)
+	}
+
 	// must be arrow function to pass to next()
 	private onNewCandleBuilt = (data: NewCandleData): void => {
 		const { candle, symbol } = data
 		this.triggerService.processCandle(symbol, candle)
+	}
+
+	private onNewCandle = (data: NewCandleData): void => {
+		const { candle, symbol, timeframe } = data
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		priceHistoryRepository.addCandle({ symbol, timeframe, candle })
 	}
 
 	/**
@@ -94,24 +131,8 @@ export default class Broker {
 	 * WARNING: Do not modify the returned array. It will alter the past candles stored in the broker timeline.
 	 */
 	public getCandles(params: GetCandlesParams): Candle[] {
-		const { symbol, timeframe, startTime, endTime } = params
-		const candles = this.timeline.getCandles(symbol, timeframe, 'past')
-
-		const currentTime = this.timeline.getTime()
-		const hasPastStartTime = typeof startTime === 'number' && startTime < currentTime
-		const hasPastEndTime = typeof endTime === 'number' && endTime < currentTime
-
-		if (!hasPastStartTime && !hasPastEndTime) return candles
-
-		const indexStart = hasPastStartTime
-			? this.timeline.getIndexAtTime({ time: startTime, symbol, timeframe }) || 0
-			: 0
-
-		const indexEnd = hasPastEndTime
-			? (this.timeline.getIndexAtTime({ time: endTime, symbol, timeframe }) || candles.length - 1) + 1
-			: candles.length
-
-		return indexStart === 0 && indexEnd === candles.length ? candles : candles.slice(indexStart, indexEnd)
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		return priceHistoryRepository.getCandles(params) || []
 	}
 
 	public placeOrder(params: PlaceOrderBrokerParams): Position {
@@ -176,7 +197,8 @@ export default class Broker {
 
 	public next(): boolean {
 		const hasMoreCandles = this.timeline.next({
-			onNewCandleBuilt: this.onNewCandleBuilt
+			onNewCandleBuilt: this.onNewCandleBuilt,
+			onNewCandle: this.onNewCandle
 		})
 		if (!hasMoreCandles) return false
 		return true

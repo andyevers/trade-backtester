@@ -2,7 +2,7 @@ import Broker from '@src/broker/Broker'
 import Timeline from '@src/broker/Timeline'
 import { Account } from '@src/repository/AccountRepository'
 import EntityManager from '@src/repository/EntityManager'
-import { PriceHistory } from '@src/repository/PriceHistoryRepository'
+import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import AccountService from '@src/service/AccountService'
 import PositionService from '@src/service/PositionService'
 import TriggerService from '@src/service/TriggerService'
@@ -18,9 +18,9 @@ describe('Broker', () => {
 	let broker: Broker
 	let account: Account
 
-	let priceHistoryDay: PriceHistory
-	let priceHistoryDayTSLA: PriceHistory
-	let priceHistoryHour4GM: PriceHistory
+	let priceHistoryDay: PriceHistoryCreateParams
+	let priceHistoryDayTSLA: PriceHistoryCreateParams
+	let priceHistoryHour4GM: PriceHistoryCreateParams
 
 	// 2022-08-20
 	const MS_TIME_START_AAPL_TSLA = 1661002943915
@@ -45,7 +45,7 @@ describe('Broker', () => {
 
 	beforeEach(() => {
 		entityManager = new EntityManager()
-		timeline = new Timeline({ entityManager })
+		timeline = new Timeline()
 		positionService = new PositionService({ entityManager })
 		accountService = new AccountService({ entityManager, positionService })
 		triggerService = new TriggerService({ entityManager, accountService })
@@ -55,7 +55,9 @@ describe('Broker', () => {
 
 		const priceHistoryRepository = entityManager.getRepository('priceHistory')
 
-		priceHistoryDay = priceHistoryRepository.create({
+		const priceHistoryArr: PriceHistoryCreateParams[] = []
+
+		priceHistoryDay = {
 			symbol: 'AAPL',
 			timeframe: 'day',
 			candles: candles('day', MS_TIME_START_AAPL_TSLA, [
@@ -67,9 +69,9 @@ describe('Broker', () => {
 				{ open: 3, high: 5, low: 2, close: 4 },
 				{ open: 2, high: 4, low: 1, close: 3 }
 			])
-		})
+		}
 
-		priceHistoryDayTSLA = priceHistoryRepository.create({
+		priceHistoryDayTSLA = {
 			symbol: 'TSLA',
 			timeframe: 'day',
 			candles: candles('day', MS_TIME_START_AAPL_TSLA, [
@@ -81,9 +83,9 @@ describe('Broker', () => {
 				{ open: 30, high: 50, low: 20, close: 40 },
 				{ open: 20, high: 40, low: 10, close: 30 }
 			])
-		})
+		}
 
-		priceHistoryHour4GM = priceHistoryRepository.create({
+		priceHistoryHour4GM = {
 			symbol: 'GM',
 			timeframe: 'hour4',
 			candles: candles('hour4', MS_TIME_START_GM, [
@@ -96,9 +98,17 @@ describe('Broker', () => {
 				{ open: 3.75, high: 5.75, low: 2.75, close: 4.75 },
 				{ open: 4.0, high: 6.0, low: 3.0, close: 5.0 }
 			])
-		})
+		}
+		priceHistoryArr.push(priceHistoryDay, priceHistoryDayTSLA, priceHistoryHour4GM)
 
-		timeline.initFromPriceHistoryId(priceHistoryDay.id)
+		timeline.setPriceHistory(priceHistoryArr)
+		timeline.initFromPriceHistory('AAPL', 'day', {
+			onNewCandle(data) {
+				const { candle, symbol, timeframe } = data
+				const priceHistoryRepository = entityManager.getRepository('priceHistory')
+				priceHistoryRepository.addCandle({ candle, symbol, timeframe })
+			}
+		})
 	})
 
 	test('getCandles', () => {
@@ -129,6 +139,8 @@ describe('Broker', () => {
 
 		timeline.setTime(timeRangeEnd)
 
+		const priceHistoryRepository = entityManager.getRepository('priceHistory')
+
 		const candlesGMAfter = broker.getCandles({
 			symbol: 'GM',
 			timeframe: 'hour4'
@@ -146,8 +158,16 @@ describe('Broker', () => {
 			timeframe: 'day'
 		})
 
-		const indexStart = timeline.getIndexAtTime({ timeframe: 'hour4', symbol: 'GM', time: timeRangeStart })
-		const indexEnd = timeline.getIndexAtTime({ timeframe: 'hour4', symbol: 'GM', time: timeRangeEnd })
+		const indexStart = priceHistoryRepository.getIndexNearTime({
+			timeframe: 'hour4',
+			symbol: 'GM',
+			time: timeRangeStart
+		})
+		const indexEnd = priceHistoryRepository.getIndexNearTime({
+			timeframe: 'hour4',
+			symbol: 'GM',
+			time: timeRangeEnd
+		})
 
 		expect(candlesGMAfter).toEqual(priceHistoryHour4GM.candles)
 		expect(candlesGMTimeRangeAfter).toEqual(
@@ -308,7 +328,7 @@ describe('Broker', () => {
 		const quoteTSLA2 = broker.getQuote('TSLA')
 		const quoteGM2 = broker.getQuote('GM')
 
-		const candlesCurrentGM = timeline.getCandles('GM', 'hour4', 'present')
+		const candlesCurrentGM = timeline.getNextCandles('GM', 'hour4')
 		const latestCandleGM = candlesCurrentGM[candlesCurrentGM.length - 1]
 
 		expect(quoteAAPL2?.ask).toBe(candlesAAPL[1].close)

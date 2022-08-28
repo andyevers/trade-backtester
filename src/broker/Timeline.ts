@@ -1,20 +1,13 @@
 import {
+	GetIndexAtTimeParams,
+	PriceHistoryCreateParams,
 	SymbolTimeframeKey,
-	EntityManager,
-	TimeframeType,
-	PriceHistory,
-	GetIndexAtTimeParams
+	TimeframeType
 } from '../repository'
 import { Candle } from '../types'
 
 interface CandlesBySymbolTimeframe {
 	[key: SymbolTimeframeKey]: Candle[]
-}
-
-type TimeTense = 'past' | 'present' | 'all'
-
-interface TimelineArgs {
-	entityManager: EntityManager
 }
 
 export interface NewCandleData {
@@ -23,13 +16,11 @@ export interface NewCandleData {
 	timeframe: TimeframeType
 }
 
-type NewCandleCallback = (data: NewCandleData) => void
 interface SetTimeCallbacks {
 	onNewCandle?: (data: NewCandleData) => void
 	onNewCandleBuilt?: (data: NewCandleData) => void
 }
 
-// TODO: Move storing of candles to PriceHistoryRepository
 export default class Timeline {
 	private time: number = 0
 	private timelineIndex: number = 0
@@ -39,44 +30,49 @@ export default class Timeline {
 		[stfKey: SymbolTimeframeKey]: number
 	} = {}
 
-	private readonly candles: {
-		[T in TimeTense]: CandlesBySymbolTimeframe
-	} = {
-		past: {},
-		present: {},
-		all: {}
-	}
+	private candlesByStfKey: {
+		[stfKey: SymbolTimeframeKey]: Candle[]
+	} = {}
+
+	private indexByTimeByStfKey: {
+		[stfKey: SymbolTimeframeKey]: {
+			[time: number]: number
+		}
+	} = {}
 
 	private latestCandlesBuilt: {
 		[symbol: string]: Candle
 	} = {}
 
-	private readonly entityManager: EntityManager
+	private nextCandles: {
+		[stfKey: SymbolTimeframeKey]: Candle[]
+	} = {}
+
 	private mainTimeframe: TimeframeType = 'day'
 
-	constructor(args: TimelineArgs) {
-		const { entityManager } = args
-		this.entityManager = entityManager
+	private candleCallbacks: SetTimeCallbacks = {}
+
+	public setCandleCallbacks(callbacks: SetTimeCallbacks) {
+		this.candleCallbacks = callbacks
 	}
 
-	/**
-	 * The candle times of this priceHistory will be used to create the timeline, and it's timeframe
-	 * will be used as the main timeframe that takes priority over others during iteration when
-	 * using setTime. This will also set the current time to the first candle time. The priceHistory
-	 * must be registered in the PriceHistoryRepository
-	 *
-	 * @param priceHistoryIdForTimeline id of price history that will be used for the timeline
-	 */
-	public initFromPriceHistoryId(priceHistoryIdForTimeline: number): void {
-		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
-		const priceHistory = priceHistoryRepository.get(priceHistoryIdForTimeline)
-		if (!priceHistory) {
-			throw new Error(`priceHistory with id ${priceHistoryIdForTimeline} not found`)
+	public initFromPriceHistory(
+		symbol: string,
+		timeframe: TimeframeType,
+		callbacks: SetTimeCallbacks = {}
+	): void {
+		const candlesByStfKey = this.getAllCandlesClone()
+		const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
+		const candles = candlesByStfKey[stfKey]
+
+		if (!candles) {
+			throw new Error(`No candles found for symbol ${symbol} and timeframe ${timeframe}`)
 		}
-		this.setPriceHistory(priceHistoryRepository.getAll())
-		this.setTimeline(priceHistory.candles.map((c) => c.time))
-		this.setMainTimeframe(priceHistory.timeframe)
-		this.setStartTime(this.timeline[0])
+
+		this.setTimeline(candles.map((c) => c.time))
+		this.setMainTimeframe(timeframe)
+		this.setCandleCallbacks(callbacks)
+		this.setStartTime(this.timeline[0], callbacks)
 	}
 
 	/**
@@ -114,15 +110,16 @@ export default class Timeline {
 	 */
 	public getIndexAtTime(params: GetIndexAtTimeParams): number | null {
 		const { symbol, time, timeframe } = params
-		if (time > this.time) return -1
-		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
-		return priceHistoryRepository.getIndexNearTime({ symbol, time, timeframe })
+		const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
+		const symbolTimeframeTimes = this.indexByTimeByStfKey[stfKey]
+
+		return symbolTimeframeTimes ? symbolTimeframeTimes[time] : null
 	}
 
 	/**
 	 * sets current index and time to time at the provided index from this.timeline.
 	 */
-	public setTimelineIndex(index: number, callbacks: SetTimeCallbacks): void {
+	public setTimelineIndex(index: number, callbacks?: SetTimeCallbacks): void {
 		const timeAtIndex = this.timeline[index]
 		if (this.timeline.length === 0) {
 			throw new Error('You must set a timeline before using setTimelineIndex')
@@ -141,9 +138,13 @@ export default class Timeline {
 	/**
 	 * Past candles includes current candles
 	 */
-	public getCandles(symbol: string, timeframe: TimeframeType, timeTense: TimeTense): Candle[] {
+	public getAllCandles(symbol: string, timeframe: TimeframeType): Candle[] {
 		const key = `${symbol}_${timeframe}` as SymbolTimeframeKey
-		return this.candles[timeTense][key] || []
+		return this.candlesByStfKey[key] || []
+	}
+
+	public getNextCandles(symbol: string, timeframe: TimeframeType) {
+		return this.nextCandles[`${symbol}_${timeframe}` as SymbolTimeframeKey] || []
 	}
 
 	/**
@@ -156,48 +157,36 @@ export default class Timeline {
 	/**
 	 * Same as setTime but removes present candles
 	 */
-	public setStartTime(time: number): void {
-		this.setTime(time)
-		for (const symbolTimeframe in this.candles.present) {
-			this.candles.present[symbolTimeframe as SymbolTimeframeKey] = []
+	public setStartTime(time: number, callbacks?: SetTimeCallbacks): void {
+		this.setTime(time, callbacks)
+		for (const symbolTimeframe in this.nextCandles) {
+			this.nextCandles[symbolTimeframe as SymbolTimeframeKey] = []
 		}
 	}
 
 	/**
 	 * Moves all candles with datetime at or before this time to 'current' and 'past' candles
 	 */
-	public setTime(time: number, callbacks: SetTimeCallbacks = {}): void {
-		const { onNewCandle = () => {}, onNewCandleBuilt = () => {} } = callbacks
+	public setTime(time: number, callbacks?: SetTimeCallbacks): void {
+		const { onNewCandle = () => {}, onNewCandleBuilt = () => {} } = callbacks || this.candleCallbacks
 		if (time < this.time) {
 			throw new Error('You cannot go back in time. use reset() to start over')
 		}
 
-		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
-
-		const bucketPast = this.candles.past
-		const bucketPresent = this.candles.present
-		const bucketAll = this.candles.all
-
 		const builtCandleSymbols: { [symbol: string]: boolean } = {}
 
-		for (const symbolTimeframe in bucketAll) {
+		for (const symbolTimeframe in this.candlesByStfKey) {
 			const stfKey = symbolTimeframe as SymbolTimeframeKey
-			const candlesAll = bucketAll[stfKey]
+			const candlesAll = this.candlesByStfKey[stfKey]
 
 			let nextIndex = this.currentIndexes[stfKey] + 1
 
-			const candlesPast = bucketPast[stfKey]
-			const candlesPresent = (bucketPresent[stfKey] = [] as Candle[])
+			this.nextCandles[stfKey] = [] // reset next candles
 			const [symbol, timeframe] = stfKey.split('_') as [string, TimeframeType]
 
 			// if canldes are done iterating, use last index for current index and continue
 			if (nextIndex >= candlesAll.length) {
-				priceHistoryRepository.setIndexAtTime({
-					symbol,
-					time: time,
-					timeframe: timeframe as TimeframeType,
-					index: this.currentIndexes[stfKey]
-				})
+				this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
 				continue
 			}
 
@@ -207,8 +196,7 @@ export default class Timeline {
 			while (candlesAll[nextIndex]?.time <= time) {
 				const candle = candlesAll[nextIndex]
 				candleGenerator.next(candle)
-				candlesPresent.push(candle)
-				candlesPast.push(candle)
+				this.nextCandles[stfKey].push(candle)
 
 				this.currentIndexes[stfKey]++
 				nextIndex = this.currentIndexes[stfKey] + 1
@@ -216,25 +204,19 @@ export default class Timeline {
 			}
 
 			// used for getCandles startTime and endTime
-			priceHistoryRepository.setIndexAtTime({
-				symbol,
-				time: time,
-				timeframe,
-				index: this.currentIndexes[stfKey]
-			})
-
+			this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
 			const builtCandle = candleGenerator.return().value as Candle
 
 			// no candles in current time
 			if (!builtCandle) continue
 
-			const hasMainTf = bucketAll[`${symbol}_${this.mainTimeframe}`]
-			const isMainTf = timeframe === this.mainTimeframe
-			const didBuildCandle = builtCandleSymbols[symbol] === true
-
 			// TODO: This can cause issues with certain candles not being counted
 			// if 2 non-main timeframes (like month and minute) month may be skipped
 			// or vice-versa (depending which appears first in the object).
+			const hasMainTf = this.candlesByStfKey[`${symbol}_${this.mainTimeframe}`]
+			const isMainTf = timeframe === this.mainTimeframe
+			const didBuildCandle = builtCandleSymbols[symbol] === true
+
 			if (isMainTf || !hasMainTf || !didBuildCandle) {
 				this.latestCandlesBuilt[symbol] = builtCandle
 				builtCandleSymbols[symbol] = true
@@ -254,16 +236,19 @@ export default class Timeline {
 		this.timelineIndex = 0
 		this.time = 0
 
-		this.candles.present = {}
-		this.candles.past = {}
+		this.nextCandles = {}
+		this.indexByTimeByStfKey = {}
 
 		if (keepCandlesAndTimeline) {
-			this.candles.all = this.getAllCandlesClone()
+			this.candlesByStfKey = this.getAllCandlesClone()
 			for (const symbolTimeframe in this.currentIndexes) {
 				this.currentIndexes[symbolTimeframe as SymbolTimeframeKey] = -1
 			}
 		} else {
-			this.candles.all = {}
+			this.getAllCandlesClone = () => {
+				return {}
+			}
+			this.candlesByStfKey = {}
 			this.timeline = []
 			this.currentIndexes = {}
 		}
@@ -277,28 +262,27 @@ export default class Timeline {
 			return false
 		}
 		this.timelineIndex++
-		this.setTimelineIndex(this.timelineIndex, callbacks || {})
+		this.setTimelineIndex(this.timelineIndex, callbacks)
 		return true
 	}
 
 	/**
 	 * Sets price history that will be iterated through.
 	 */
-	public setPriceHistory(priceHistoryArr: PriceHistory[]): void {
+	public setPriceHistory(priceHistoryArr: PriceHistoryCreateParams[]): void {
 		const previousTime = this.time
 		this.reset(false)
 
 		const candlesBySymbolTimeframe: CandlesBySymbolTimeframe = {}
 		for (const priceHistory of priceHistoryArr) {
 			const { symbol, timeframe, candles } = priceHistory
-			const symbolTimeframeKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
-			candlesBySymbolTimeframe[symbolTimeframeKey] = candles
+			const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
+			candlesBySymbolTimeframe[stfKey] = candles
+			this.indexByTimeByStfKey[stfKey] = {}
 
-			// 'all' will be set with this.getAllCandlesClone()
-			this.candles.past[symbolTimeframeKey] = []
-			this.candles.present[symbolTimeframeKey] = []
-
-			this.currentIndexes[symbolTimeframeKey] = -1
+			this.nextCandles[stfKey] = []
+			this.currentIndexes[stfKey] = -1
+			this.indexByTimeByStfKey[stfKey] = {}
 		}
 
 		// prevents the original object from being manipulated.
@@ -306,7 +290,7 @@ export default class Timeline {
 			`return ${JSON.stringify(candlesBySymbolTimeframe)}`
 		) as () => CandlesBySymbolTimeframe
 
-		this.candles.all = this.getAllCandlesClone()
+		this.candlesByStfKey = this.getAllCandlesClone()
 
 		if (previousTime !== 0) this.setTime(previousTime)
 	}

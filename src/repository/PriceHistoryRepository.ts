@@ -19,6 +19,12 @@ export interface PriceHistory extends Entity {
 	symbol: string
 }
 
+export interface AddCandleParams {
+	candle: Candle
+	timeframe: TimeframeType
+	symbol: string
+}
+
 export type SymbolTimeframeKey = `${string}_${TimeframeType}`
 
 export type PriceHistoryCreateParams = Omit<PriceHistory, 'id'>
@@ -59,19 +65,24 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		}
 	} = {}
 
-	public getCandlesLookup(params: GetCandlesParams): Candle[] {
+	/**
+	 * Note that getting candles by time is less efficient than getting all candles.
+	 */
+	public getCandles(params: GetCandlesParams): Candle[] {
 		const { symbol, timeframe, startTime, endTime } = params
 		const key = this.getKey(symbol, timeframe)
-		const candles = this.symbolTimeframes[key].candles
+		const candles = this.symbolTimeframes[key]?.candles || []
 
 		if (typeof startTime !== 'number' && typeof endTime !== 'number') {
 			return candles
 		}
 
-		const startIndex = this.indexByTimeByStfKey[key][startTime as number]
-		const endIndex = this.indexByTimeByStfKey[key][endTime as number]
+		const startIndex = startTime ? this.getIndexNearTime({ symbol, timeframe, time: startTime }) : 0
+		const endIndex = endTime
+			? this.getIndexNearTime({ symbol, timeframe, time: endTime })
+			: candles.length - 1
 
-		return candles.slice(startIndex, endIndex)
+		return candles.slice(startIndex as number, (endIndex as number) + 1)
 	}
 
 	/**
@@ -104,13 +115,13 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		if (time > candles[candles.length - 1].time) return candles.length - 1
 
 		// limit amount of iterations to prevent infinite loop.
-		let maxIterations = 10000
+		const maxIterations = 200
 		let totalIterations = 0
 
 		let leftIndexBound = 0
 		let rightIndexBound = candles.length - 1
 
-		// narrow index bounds until we find the closest candle. (Usually finishes in 10 - 20 iterations)
+		// narrow index bounds until we find the closest candle index. (Usually finishes in 10 - 20 iterations)
 		do {
 			let range = rightIndexBound - leftIndexBound
 			let isEven = range % 2 === 0
@@ -126,7 +137,8 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 
 			totalIterations++
 		} while (totalIterations < maxIterations)
-		return -1
+
+		throw new Error(`Could not find nearest index for time ${time} in ${maxIterations} iterations.`)
 	}
 
 	public setIndexAtTime(params: SetIndexAtTimeParams) {
@@ -160,6 +172,18 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 			}
 		} else {
 			this.create(params)
+		}
+	}
+
+	public addCandle(params: AddCandleParams) {
+		const { candle, symbol, timeframe } = params
+		const key = this.getKey(symbol, timeframe)
+		const priceHistory = this.symbolTimeframes[key]
+		if (priceHistory) {
+			priceHistory.candles.push(candle)
+			this.indexByTimeByStfKey[key][candle.time] = priceHistory.candles.length - 1
+		} else {
+			this.create({ symbol, timeframe, candles: [candle] })
 		}
 	}
 
