@@ -137,7 +137,7 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		this.indexByTimeByStfKey[key] = symbolTimeframeTimes
 	}
 
-	public getBySymbolTimeframe(symbol: string, timeframe: TimeframeType): PriceHistory {
+	public getBySymbolTimeframe(symbol: string, timeframe: TimeframeType): PriceHistory | null {
 		const priceHistory = this.symbolTimeframes[this.getKey(symbol, timeframe)]
 		return priceHistory || null
 	}
@@ -179,6 +179,9 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		const priceHistory = super.create(params)
 		const { symbol, timeframe } = priceHistory
 		const key = this.getKey(symbol, timeframe)
+		if (this.symbolTimeframes[key]) {
+			throw new Error(`PriceHistory already exists for ${symbol} ${timeframe}`)
+		}
 		this.symbolTimeframes[key] = priceHistory
 		this.indexByTimeByStfKey[key] = {}
 		for (let i = 0; i < priceHistory.candles.length; i++) {

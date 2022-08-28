@@ -71,7 +71,7 @@ export default class Broker {
 	}
 
 	// must be arrow function to pass to next()
-	private onNewCandle = (data: NewCandleData): void => {
+	private onNewCandleBuilt = (data: NewCandleData): void => {
 		const { candle, symbol } = data
 		this.triggerService.processCandle(symbol, candle)
 	}
@@ -175,7 +175,10 @@ export default class Broker {
 	}
 
 	public next(): boolean {
-		if (!this.timeline.next(this.onNewCandle)) return false
+		const hasMoreCandles = this.timeline.next({
+			onNewCandleBuilt: this.onNewCandleBuilt
+		})
+		if (!hasMoreCandles) return false
 		return true
 	}
 }

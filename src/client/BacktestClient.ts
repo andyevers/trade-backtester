@@ -14,8 +14,10 @@ class BacktestClient extends BaseClient {
 	}
 
 	public async fetchPriceHistory(params: GetCandlesParams): Promise<PriceHistory> {
-		return new Promise((resolve) => {
-			resolve(this.getPriceHistory(params))
+		return new Promise((resolve, reject) => {
+			const priceHistory = this.getPriceHistory(params)
+			if (priceHistory) resolve(priceHistory)
+			else reject('Price history not found')
 		})
 	}
 

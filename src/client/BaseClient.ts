@@ -148,15 +148,25 @@ export default abstract class BaseClient {
 		return candles.slice(indexFirstCandle, indexLastCandle + 1)
 	}
 
-	public getPriceHistory(params: GetCandlesParams): PriceHistory {
+	public getPriceHistory(params: GetCandlesParams): PriceHistory | null {
 		const { symbol, timeframe } = params
 		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
 		const priceHistory = priceHistoryRepository.getBySymbolTimeframe(symbol, timeframe)
+		if (!priceHistory) return null
 		return {
 			id: priceHistory.id,
 			symbol,
 			timeframe,
 			candles: this.getCandles(params)
 		}
+	}
+
+	// TODO: make this push candles to priceHistoryRepository
+	public addCandles(params: any): void {
+		const { symbol, timeframe, candles } = params
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		const priceHistory = priceHistoryRepository.getBySymbolTimeframe(symbol, timeframe)
+		if (!priceHistory) return
+		priceHistoryRepository.addCandles({ symbol, timeframe, candles })
 	}
 }

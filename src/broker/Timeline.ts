@@ -20,9 +20,14 @@ interface TimelineArgs {
 export interface NewCandleData {
 	candle: Candle
 	symbol: string
+	timeframe: TimeframeType
 }
 
 type NewCandleCallback = (data: NewCandleData) => void
+interface SetTimeCallbacks {
+	onNewCandle?: (data: NewCandleData) => void
+	onNewCandleBuilt?: (data: NewCandleData) => void
+}
 
 // TODO: Move storing of candles to PriceHistoryRepository
 export default class Timeline {
@@ -117,12 +122,12 @@ export default class Timeline {
 	/**
 	 * sets current index and time to time at the provided index from this.timeline.
 	 */
-	public setTimelineIndex(index: number, onNewCandle?: NewCandleCallback): void {
+	public setTimelineIndex(index: number, callbacks: SetTimeCallbacks): void {
 		const timeAtIndex = this.timeline[index]
 		if (this.timeline.length === 0) {
 			throw new Error('You must set a timeline before using setTimelineIndex')
 		}
-		this.setTime(timeAtIndex, onNewCandle)
+		this.setTime(timeAtIndex, callbacks)
 		this.timelineIndex = index
 	}
 
@@ -161,7 +166,8 @@ export default class Timeline {
 	/**
 	 * Moves all candles with datetime at or before this time to 'current' and 'past' candles
 	 */
-	public setTime(time: number, onNewCandle?: NewCandleCallback): void {
+	public setTime(time: number, callbacks: SetTimeCallbacks = {}): void {
+		const { onNewCandle = () => {}, onNewCandleBuilt = () => {} } = callbacks
 		if (time < this.time) {
 			throw new Error('You cannot go back in time. use reset() to start over')
 		}
@@ -182,7 +188,7 @@ export default class Timeline {
 
 			const candlesPast = bucketPast[stfKey]
 			const candlesPresent = (bucketPresent[stfKey] = [] as Candle[])
-			const [symbol, timeframe] = stfKey.split('_')
+			const [symbol, timeframe] = stfKey.split('_') as [string, TimeframeType]
 
 			// if canldes are done iterating, use last index for current index and continue
 			if (nextIndex >= candlesAll.length) {
@@ -206,13 +212,14 @@ export default class Timeline {
 
 				this.currentIndexes[stfKey]++
 				nextIndex = this.currentIndexes[stfKey] + 1
+				onNewCandle({ candle, symbol, timeframe })
 			}
 
 			// used for getCandles startTime and endTime
 			priceHistoryRepository.setIndexAtTime({
 				symbol,
 				time: time,
-				timeframe: timeframe as TimeframeType,
+				timeframe,
 				index: this.currentIndexes[stfKey]
 			})
 
@@ -231,7 +238,7 @@ export default class Timeline {
 			if (isMainTf || !hasMainTf || !didBuildCandle) {
 				this.latestCandlesBuilt[symbol] = builtCandle
 				builtCandleSymbols[symbol] = true
-				if (onNewCandle) onNewCandle({ candle: builtCandle, symbol })
+				onNewCandleBuilt({ candle: builtCandle, symbol, timeframe })
 			}
 		}
 
@@ -265,12 +272,12 @@ export default class Timeline {
 	/**
 	 * Sets time to time at next index on timeline.
 	 */
-	public next(onNewCandle?: NewCandleCallback): boolean {
+	public next(callbacks?: SetTimeCallbacks): boolean {
 		if (!this.timeline[this.timelineIndex + 1]) {
 			return false
 		}
 		this.timelineIndex++
-		this.setTimelineIndex(this.timelineIndex, onNewCandle)
+		this.setTimelineIndex(this.timelineIndex, callbacks || {})
 		return true
 	}
 
