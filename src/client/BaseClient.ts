@@ -2,32 +2,30 @@ import { HasPositionsParams } from '../broker'
 import {
 	Account,
 	AddCandleParams,
-	Entity,
 	EntityManager,
 	GetCandlesParams,
 	Position,
 	PositionsById,
 	PositionsByIdLookupFilters,
 	PriceHistory,
-	RepositoriesByName,
-	TimeframeType
+	RepositoriesByName
 } from '../repository'
 import { CloseOrderParams, PlaceOrderParams } from '../service'
 import { Candle } from '../types'
 
 export interface BaseClientArgs {
-	entityManager: EntityManager
+	entityManager?: EntityManager
 }
 
 // TODO: Add EventBus to capture response from async methods.
 
 export default abstract class BaseClient {
-	private readonly accountId: number
-	private readonly entityManager: EntityManager
+	protected readonly accountId: number
+	protected readonly entityManager: EntityManager
 
 	constructor(args: BaseClientArgs) {
 		// TODO: get accountId from entityManager
-		const { entityManager } = args
+		const { entityManager = new EntityManager() } = args
 		this.entityManager = entityManager
 		this.accountId = 1
 	}

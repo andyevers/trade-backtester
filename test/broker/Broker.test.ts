@@ -53,8 +53,6 @@ describe('Broker', () => {
 		broker = new Broker({ accountService, entityManager, positionService, timeline, triggerService })
 		account = entityManager.getRepository('account').create({ startingCash: 5000 })
 
-		const priceHistoryRepository = entityManager.getRepository('priceHistory')
-
 		const priceHistoryArr: PriceHistoryCreateParams[] = []
 
 		priceHistoryDay = {
@@ -112,6 +110,7 @@ describe('Broker', () => {
 	})
 
 	test('getCandles', () => {
+		// TODO: Move to BrokerTest
 		// set to end.
 		const candlesGMBefore = broker.getCandles({
 			symbol: 'GM',

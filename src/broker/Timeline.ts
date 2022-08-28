@@ -21,6 +21,9 @@ interface SetTimeCallbacks {
 	onNewCandleBuilt?: (data: NewCandleData) => void
 }
 
+/**
+ * Manages current candles and time while broker is running.
+ */
 export default class Timeline {
 	private time: number = 0
 	private timelineIndex: number = 0

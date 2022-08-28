@@ -65,6 +65,9 @@ export interface BrokerInitParams {
 	startTime: number
 }
 
+/**
+ * Mock broker for backtesting. Used with BacktestClient.
+ */
 export default class Broker {
 	private readonly entityManager: EntityManager
 	private readonly accountService: AccountService
@@ -77,6 +80,10 @@ export default class Broker {
 		this.accountService = accountService
 		this.timeline = timeline
 		this.triggerService = triggerService
+	}
+
+	public getEntityManager(): EntityManager {
+		return this.entityManager
 	}
 
 	public init(params: BrokerInitParams): void {
@@ -125,10 +132,7 @@ export default class Broker {
 	}
 
 	/**
-	 * Gets past candles for given symbol and timeframe.
-	 * Note that getting all candles is much faster than filtering by date. (doesn't require Array.slice)
-	 *
-	 * WARNING: Do not modify the returned array. It will alter the past candles stored in the broker timeline.
+	 * TODO: remove this method.
 	 */
 	public getCandles(params: GetCandlesParams): Candle[] {
 		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
@@ -196,10 +200,7 @@ export default class Broker {
 	}
 
 	public next(): boolean {
-		const hasMoreCandles = this.timeline.next({
-			onNewCandleBuilt: this.onNewCandleBuilt,
-			onNewCandle: this.onNewCandle
-		})
+		const hasMoreCandles = this.timeline.next()
 		if (!hasMoreCandles) return false
 		return true
 	}

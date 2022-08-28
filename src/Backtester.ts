@@ -30,7 +30,7 @@ export default class Backtester {
 		const positionService = new PositionServiceClass({ entityManager })
 		const accountService = new AccountServiceClass({ entityManager, positionService })
 		const triggerService = new TriggerServiceClass({ entityManager, accountService })
-		const timeline = new TimelineClass({ entityManager })
+		const timeline = new TimelineClass()
 		const broker = new BrokerClass({
 			accountService,
 			entityManager,

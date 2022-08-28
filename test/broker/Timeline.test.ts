@@ -38,8 +38,6 @@ describe('Timeline', () => {
 		entityManager = new EntityManager()
 		timeline = new Timeline()
 
-		const priceHistoryRepository = entityManager.getRepository('priceHistory')
-
 		const priceHistoryArr: PriceHistoryCreateParams[] = []
 
 		priceHistoryDay = {
@@ -55,21 +53,7 @@ describe('Timeline', () => {
 				{ open: 2, high: 4, low: 1, close: 3 }
 			])
 		}
-		// priceHistoryDay = priceHistoryRepository.create({
-		// 	symbol: 'AAPL',
-		// 	timeframe: 'day',
-		// 	candles: candles('day', MS_TIME_START_AAPL, [
-		// 		{ open: 2, high: 4, low: 1, close: 3 },
-		// 		{ open: 3, high: 5, low: 2, close: 4 },
-		// 		{ open: 4, high: 6, low: 3, close: 5 },
-		// 		{ open: 5, high: 7, low: 4, close: 6 },
-		// 		{ open: 4, high: 6, low: 3, close: 5 },
-		// 		{ open: 3, high: 5, low: 2, close: 4 },
-		// 		{ open: 2, high: 4, low: 1, close: 3 }
-		// 	])
-		// })
 
-		// priceHistoryHour4 = priceHistoryRepository.create({
 		priceHistoryHour4 = {
 			symbol: 'AAPL',
 			timeframe: 'hour4',
@@ -90,7 +74,7 @@ describe('Timeline', () => {
 				{ open: 4.75, high: 6.75, low: 2.75, close: 4.75 }
 			])
 		}
-		// priceHistoryHour4GM = priceHistoryRepository.create({
+
 		priceHistoryHour4GM = {
 			symbol: 'GM',
 			timeframe: 'hour4',
@@ -106,7 +90,6 @@ describe('Timeline', () => {
 			])
 		}
 
-		// priceHistoryPast = priceHistoryRepository.create({
 		priceHistoryPast = {
 			symbol: 'AAL',
 			timeframe: 'day',
@@ -122,7 +105,6 @@ describe('Timeline', () => {
 			])
 		}
 
-		// priceHistoryFuture = priceHistoryRepository.create({
 		priceHistoryFuture = {
 			symbol: 'AAL',
 			timeframe: 'hour4',
@@ -153,9 +135,6 @@ describe('Timeline', () => {
 				priceHistoryRepository.addCandle({ candle, symbol, timeframe })
 			}
 		})
-
-		// timeline.setPriceHistory(priceHistoryArr)
-		// timeline.initFromPriceHistoryId(priceHistoryDay.id)
 	})
 
 	test('getCandles, next, setTime', () => {
