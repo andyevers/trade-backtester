@@ -15,9 +15,6 @@ Create trading strategies and run backtests.
 
 ## TODO
 
--   timeline.reset(true) doesn't work properly
-
 ### Performance Improvements
 
--   Setting index by time in PriceHistoryRepository.addCandle and Timeline.setTime takes about 30ms each for 70,000 iterations. Find another way of doing this
 -   creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.
