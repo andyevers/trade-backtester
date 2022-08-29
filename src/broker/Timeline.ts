@@ -37,12 +37,6 @@ export default class Timeline {
 		[stfKey: SymbolTimeframeKey]: Candle[]
 	} = {}
 
-	private indexByTimeByStfKey: {
-		[stfKey: SymbolTimeframeKey]: {
-			[time: number]: number
-		}
-	} = {}
-
 	private latestCandlesBuilt: {
 		[symbol: string]: Candle
 	} = {}
@@ -75,7 +69,7 @@ export default class Timeline {
 		this.setTimeline(candles.map((c) => c.time))
 		this.setMainTimeframe(timeframe)
 		this.setCandleCallbacks(callbacks)
-		this.setStartTime(this.timeline[0], callbacks)
+		this.setStartTime(this.timeline[0])
 	}
 
 	/**
@@ -109,30 +103,20 @@ export default class Timeline {
 	}
 
 	/**
-	 * Returns -1 if candles are all in future, and final index if all candles are in past. null if not indexed.
-	 */
-	public getIndexAtTime(params: GetIndexAtTimeParams): number | null {
-		const { symbol, time, timeframe } = params
-		const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
-		const symbolTimeframeTimes = this.indexByTimeByStfKey[stfKey]
-
-		return symbolTimeframeTimes ? symbolTimeframeTimes[time] : null
-	}
-
-	/**
 	 * sets current index and time to time at the provided index from this.timeline.
 	 */
-	public setTimelineIndex(index: number, callbacks?: SetTimeCallbacks): void {
+	public setTimelineIndex(index: number): void {
 		const timeAtIndex = this.timeline[index]
 		if (this.timeline.length === 0) {
 			throw new Error('You must set a timeline before using setTimelineIndex')
 		}
-		this.setTime(timeAtIndex, callbacks)
+		this.setTime(timeAtIndex)
 		this.timelineIndex = index
 	}
 
 	/**
-	 * Candles that appear multiple in one increment will be combined into a single candle
+	 * Candles that appear multiple in one increment will be combined into a single candle.
+	 * Note: These are not necessarily current candles, just the latest built candle for that symbol timeframe
 	 */
 	public getLatestCandleBuilt(symbol: string): Candle | null {
 		return this.latestCandlesBuilt[symbol] || null
@@ -146,7 +130,7 @@ export default class Timeline {
 		return this.candlesByStfKey[key] || []
 	}
 
-	public getNextCandles(symbol: string, timeframe: TimeframeType) {
+	public getCurrentCandles(symbol: string, timeframe: TimeframeType): Candle[] {
 		return this.nextCandles[`${symbol}_${timeframe}` as SymbolTimeframeKey] || []
 	}
 
@@ -160,8 +144,8 @@ export default class Timeline {
 	/**
 	 * Same as setTime but removes present candles
 	 */
-	public setStartTime(time: number, callbacks?: SetTimeCallbacks): void {
-		this.setTime(time, callbacks)
+	public setStartTime(time: number): void {
+		this.setTime(time)
 		for (const symbolTimeframe in this.nextCandles) {
 			this.nextCandles[symbolTimeframe as SymbolTimeframeKey] = []
 		}
@@ -182,32 +166,42 @@ export default class Timeline {
 			const stfKey = symbolTimeframe as SymbolTimeframeKey
 			const candlesAll = this.candlesByStfKey[stfKey]
 
+			const [symbol, timeframe] = stfKey.split('_') as [string, TimeframeType]
+			const isMainTf = timeframe === this.mainTimeframe
+
 			let nextIndex = this.currentIndexes[stfKey] + 1
 
-			this.nextCandles[stfKey] = [] // reset next candles
-			const [symbol, timeframe] = stfKey.split('_') as [string, TimeframeType]
+			// if candles are done iterating, use last index for current index and continue
+			if (nextIndex >= candlesAll.length) continue
 
-			// if canldes are done iterating, use last index for current index and continue
-			if (nextIndex >= candlesAll.length) {
-				this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
+			// if main timeframe and time, skip candleGenerator
+			if (isMainTf && candlesAll[nextIndex]?.time === time) {
+				// TODO: Reduce duplicated code.
+				const candle = candlesAll[nextIndex]
+				this.nextCandles[stfKey] = [candle]
+				this.currentIndexes[stfKey] = nextIndex
+
+				this.latestCandlesBuilt[symbol] = candle
+				builtCandleSymbols[symbol] = true
+				onNewCandle({ candle, symbol, timeframe })
+				onNewCandleBuilt({ candle: candle, symbol, timeframe })
 				continue
 			}
 
+			this.nextCandles[stfKey] = [] // reset next candles
+
 			// the current candle or combined candle if sub-timeframe
 			const candleGenerator = this.candleGenerator(candlesAll[nextIndex])
-
 			while (candlesAll[nextIndex]?.time <= time) {
 				const candle = candlesAll[nextIndex]
 				candleGenerator.next(candle)
 				this.nextCandles[stfKey].push(candle)
 
 				this.currentIndexes[stfKey]++
-				nextIndex = this.currentIndexes[stfKey] + 1
+				nextIndex++
 				onNewCandle({ candle, symbol, timeframe })
 			}
 
-			// used for getCandles startTime and endTime
-			this.indexByTimeByStfKey[stfKey][time] = this.currentIndexes[stfKey]
 			const builtCandle = candleGenerator.return().value as Candle
 
 			// no candles in current time
@@ -217,7 +211,6 @@ export default class Timeline {
 			// if 2 non-main timeframes (like month and minute) month may be skipped
 			// or vice-versa (depending which appears first in the object).
 			const hasMainTf = this.candlesByStfKey[`${symbol}_${this.mainTimeframe}`]
-			const isMainTf = timeframe === this.mainTimeframe
 			const didBuildCandle = builtCandleSymbols[symbol] === true
 
 			if (isMainTf || !hasMainTf || !didBuildCandle) {
@@ -240,7 +233,6 @@ export default class Timeline {
 		this.time = 0
 
 		this.nextCandles = {}
-		this.indexByTimeByStfKey = {}
 
 		if (keepCandlesAndTimeline) {
 			this.candlesByStfKey = this.getAllCandlesClone()
@@ -260,12 +252,12 @@ export default class Timeline {
 	/**
 	 * Sets time to time at next index on timeline.
 	 */
-	public next(callbacks?: SetTimeCallbacks): boolean {
+	public next(): boolean {
 		if (!this.timeline[this.timelineIndex + 1]) {
 			return false
 		}
 		this.timelineIndex++
-		this.setTimelineIndex(this.timelineIndex, callbacks)
+		this.setTimelineIndex(this.timelineIndex)
 		return true
 	}
 
@@ -281,11 +273,9 @@ export default class Timeline {
 			const { symbol, timeframe, candles } = priceHistory
 			const stfKey = `${symbol}_${timeframe}` as SymbolTimeframeKey
 			candlesBySymbolTimeframe[stfKey] = candles
-			this.indexByTimeByStfKey[stfKey] = {}
 
 			this.nextCandles[stfKey] = []
 			this.currentIndexes[stfKey] = -1
-			this.indexByTimeByStfKey[stfKey] = {}
 		}
 
 		// prevents the original object from being manipulated.
@@ -307,12 +297,15 @@ export default class Timeline {
 
 	/**
 	 * Create a candle from smaller timeframe candles
+	 * TODO: This is only used to get current prices on additional priceHistory and it's pretty slow
+	 * about 10ms - 15ms in 70,000 iterations
 	 */
 	private *candleGenerator(startingCandle: Candle): Generator<Candle | undefined, void, Candle> {
 		let builtCandle = { ...startingCandle }
 		try {
 			while (true) {
 				const nextCandle: Candle = yield
+
 				builtCandle.close = nextCandle.close
 				builtCandle.volume += nextCandle.volume
 				builtCandle.time = nextCandle.time > builtCandle.time ? nextCandle.time : builtCandle.time

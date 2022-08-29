@@ -327,7 +327,7 @@ describe('Broker', () => {
 		const quoteTSLA2 = broker.getQuote('TSLA')
 		const quoteGM2 = broker.getQuote('GM')
 
-		const candlesCurrentGM = timeline.getNextCandles('GM', 'hour4')
+		const candlesCurrentGM = timeline.getCurrentCandles('GM', 'hour4')
 		const latestCandleGM = candlesCurrentGM[candlesCurrentGM.length - 1]
 
 		expect(quoteAAPL2?.ask).toBe(candlesAAPL[1].close)

@@ -132,7 +132,7 @@ export default class Broker {
 	}
 
 	/**
-	 * TODO: remove this method.
+	 * TODO: remove this method. moved to BaseClient
 	 */
 	public getCandles(params: GetCandlesParams): Candle[] {
 		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
@@ -176,7 +176,9 @@ export default class Broker {
 		return closedOrders
 	}
 
-	// TODO: Remove this method.
+	/**
+	 * TODO: remove this method. moved to BaseClient
+	 */
 	public hasPositions(params: HasPositionsParams): boolean {
 		const { accountId, status, type, symbol } = params
 		const positionRepository = this.entityManager.getRepository('position')
@@ -186,6 +188,9 @@ export default class Broker {
 		return false
 	}
 
+	/**
+	 * TODO: remove this method. moved to BaseClient
+	 */
 	public getAccount(accountId: number): AccountWithPositions {
 		const accountRepository = this.entityManager.getRepository('account')
 		const positionRepository = this.entityManager.getRepository('position')

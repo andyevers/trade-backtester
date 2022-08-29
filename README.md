@@ -12,3 +12,12 @@ Create trading strategies and run backtests.
 -   When using sub-timeframes, candles will be combined to a single candle when activating triggers or getting price data. for example, if your main timeframe is 'day' and you also have 'hour4', 6 hour4 candles will be combined to activate triggers and get current price data for that symbol.
 -   Triggers are activated while each new candle is being iterated, so when one trigger is activated (like a stopLoss or takeProfit), be aware that other candle data may not be updated yet.
 -   Each trigger is only tested once per symbol. if you have AAPL 'day' and AAPL 'minute', triggers on symbol AAPL will be tested only using the main timeframe if present, or the first combined candle for AAPL
+
+## TODO
+
+-   timeline.reset(true) doesn't work properly
+
+### Performance Improvements
+
+-   Setting index by time in PriceHistoryRepository.addCandle and Timeline.setTime takes about 30ms each for 70,000 iterations. Find another way of doing this
+-   creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.

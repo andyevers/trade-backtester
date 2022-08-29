@@ -16,11 +16,11 @@ describe('BacktestClient', () => {
 	let triggerService: TriggerService
 
 	let priceHistoryDay: PriceHistoryCreateParams
-	let priceHistoryDayTSLA: PriceHistoryCreateParams
+	let priceHistoryHour4: PriceHistoryCreateParams
 	let priceHistoryHour4GM: PriceHistoryCreateParams
 
 	// 2022-08-20
-	const MS_TIME_START_AAPL_TSLA = 1661002943915
+	const MS_TIME_START_AAPL = 1661002943915
 	const MS_TIME_START_GM = 1661024543915
 	const MS_TIMES = {
 		day: 86400000,
@@ -52,7 +52,7 @@ describe('BacktestClient', () => {
 		priceHistoryDay = {
 			symbol: 'AAPL',
 			timeframe: 'day',
-			candles: candles('day', MS_TIME_START_AAPL_TSLA, [
+			candles: candles('day', MS_TIME_START_AAPL, [
 				{ open: 2, high: 4, low: 1, close: 3 },
 				{ open: 3, high: 5, low: 2, close: 4 },
 				{ open: 4, high: 6, low: 3, close: 5 },
@@ -63,17 +63,24 @@ describe('BacktestClient', () => {
 			])
 		}
 
-		priceHistoryDayTSLA = {
-			symbol: 'TSLA',
-			timeframe: 'day',
-			candles: candles('day', MS_TIME_START_AAPL_TSLA, [
-				{ open: 20, high: 40, low: 10, close: 30 },
-				{ open: 30, high: 50, low: 20, close: 40 },
-				{ open: 40, high: 60, low: 30, close: 50 },
-				{ open: 50, high: 70, low: 40, close: 60 },
-				{ open: 40, high: 60, low: 30, close: 50 },
-				{ open: 30, high: 50, low: 20, close: 40 },
-				{ open: 20, high: 40, low: 10, close: 30 }
+		priceHistoryHour4 = {
+			symbol: 'AAPL',
+			timeframe: 'hour4',
+			candles: candles('hour4', MS_TIME_START_AAPL, [
+				{ open: 2.0, high: 4.0, low: 1.0, close: 3.0 },
+				{ open: 2.25, high: 4.25, low: 1.25, close: 3.25 },
+				{ open: 2.5, high: 4.5, low: 1.5, close: 3.5 },
+				{ open: 2.75, high: 4.75, low: 1.75, close: 3.75 },
+				{ open: 3.0, high: 5.1, low: 2.0, close: 4.0 },
+				{ open: 3.25, high: 5.25, low: 2.25, close: 4.25 },
+				{ open: 3.5, high: 5.5, low: 2.5, close: 4.5 },
+				{ open: 3.75, high: 5.75, low: 2.75, close: 4.75 },
+				{ open: 4.0, high: 6.0, low: 3.0, close: 5.0 },
+				{ open: 4.25, high: 6.25, low: 3.25, close: 5.25 },
+				{ open: 4.5, high: 6.5, low: 2.5, close: 4.5 },
+				{ open: 4.75, high: 6.75, low: 2.75, close: 4.75 },
+				{ open: 5.0, high: 7.0, low: 3.0, close: 5.0 },
+				{ open: 4.75, high: 6.75, low: 2.75, close: 4.75 }
 			])
 		}
 
@@ -95,14 +102,77 @@ describe('BacktestClient', () => {
 		broker.init({
 			accounts: [{ startingCash: 20000 }, { startingCash: 10000 }],
 			priceHistory: priceHistoryDay,
-			priceHistoryAddional: [priceHistoryDayTSLA, priceHistoryHour4GM],
-			startTime: MS_TIME_START_AAPL_TSLA
+			priceHistoryAddional: [priceHistoryHour4, priceHistoryHour4GM],
+			startTime: MS_TIME_START_AAPL
 		})
 	})
 
 	test('getCandles', () => {
-		const candles = backtestClient.getCandles({ symbol: 'AAPL', timeframe: 'day' })
-		// expect(candles).toEqual([])
-		// expect(candles).toEqual(candles('hour4', MS_TIME_START_AAPL, prices))
+		const candlesDay = priceHistoryDay.candles
+		const candlesHour4 = priceHistoryHour4.candles
+		const candlesHour4GM = priceHistoryHour4GM.candles
+
+		const getCandlesDay = () => backtestClient.getCandles({ symbol: 'AAPL', timeframe: 'day' })
+		const getCandlesHour4 = () => backtestClient.getCandles({ symbol: 'AAPL', timeframe: 'hour4' })
+		const getCandlesHour4GM = () => backtestClient.getCandles({ symbol: 'GM', timeframe: 'hour4' })
+
+		// GM should not exist in repository until candles are in past.
+		const priceHistoryRepository = entityManager.getRepository('priceHistory')
+		expect(priceHistoryRepository.getAll().find((c) => c.symbol === 'GM')).toBeUndefined()
+
+		// assert current candles at start time
+		expect(getCandlesDay()).toEqual([candlesDay[0]])
+		expect(getCandlesHour4()).toEqual([candlesHour4[0]])
+		expect(getCandlesHour4GM()).toEqual([])
+
+		broker.next()
+
+		// candles at index 1
+		expect(getCandlesDay()).toEqual([candlesDay[0], candlesDay[1]])
+		expect(getCandlesHour4()).toEqual([
+			candlesHour4[0],
+			candlesHour4[1],
+			candlesHour4[2],
+			candlesHour4[3],
+			candlesHour4[4],
+			candlesHour4[5],
+			candlesHour4[6]
+		])
+		expect(getCandlesHour4GM()).toEqual([
+			candlesHour4GM[0],
+			candlesHour4GM[1],
+			candlesHour4GM[2],
+			candlesHour4GM[3],
+			candlesHour4GM[4]
+		])
+
+		broker.next()
+
+		expect(getCandlesDay()).toEqual([candlesDay[0], candlesDay[1], candlesDay[2]])
+		expect(getCandlesHour4()).toEqual([
+			candlesHour4[0],
+			candlesHour4[1],
+			candlesHour4[2],
+			candlesHour4[3],
+			candlesHour4[4],
+			candlesHour4[5],
+			candlesHour4[6],
+			candlesHour4[7],
+			candlesHour4[8],
+			candlesHour4[9],
+			candlesHour4[10],
+			candlesHour4[11],
+			candlesHour4[12]
+		])
+		expect(getCandlesHour4GM()).toEqual([
+			candlesHour4GM[0],
+			candlesHour4GM[1],
+			candlesHour4GM[2],
+			candlesHour4GM[3],
+			candlesHour4GM[4],
+			candlesHour4GM[5],
+			candlesHour4GM[6],
+			candlesHour4GM[7]
+		])
 	})
 })

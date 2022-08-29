@@ -137,49 +137,23 @@ describe('Timeline', () => {
 		})
 	})
 
-	test('getCandles, next, setTime', () => {
-		//TODO: Move this test to BacktestClient
-		expect(true).toBe(true)
+	test('getCurrentCandles, next, setTime', () => {
 		const candlesDay = priceHistoryDay.candles
 		const candlesHour4 = priceHistoryHour4.candles
-		const priceHistoryRepository = entityManager.getRepository('priceHistory')
 
-		const getCandlesPastDay = () =>
-			priceHistoryRepository.getCandles({ symbol: 'AAPL', timeframe: 'day' })
-		const getCandlesPastHour4 = () =>
-			priceHistoryRepository.getCandles({ symbol: 'AAPL', timeframe: 'hour4' })
-		const getCandlesPresentDay = () => timeline.getNextCandles('AAPL', 'day')
-		const getCandlesPresentHour4 = () => timeline.getNextCandles('AAPL', 'hour4')
+		const getCurrentCandlesDay = () => timeline.getCurrentCandles('AAPL', 'day')
+		const getCurrentCandlesHour4 = () => timeline.getCurrentCandles('AAPL', 'hour4')
 
-		// assert current candles at start time
-		expect(getCandlesPastDay()).toEqual([candlesDay[0]])
-		expect(getCandlesPastHour4()).toEqual([candlesHour4[0]])
-		expect(getCandlesPresentDay()).toEqual([])
-		expect(getCandlesPresentHour4()).toEqual([])
+		// assert current candles at start time are empty
+		expect(getCurrentCandlesDay()).toEqual([])
+		expect(getCurrentCandlesHour4()).toEqual([])
 
-		timeline.next({
-			onNewCandle(data) {
-				const { candle, symbol, timeframe } = data
-				const priceHistoryRepository = entityManager.getRepository('priceHistory')
-				priceHistoryRepository.addCandle({ candle, symbol, timeframe })
-			}
-		})
+		timeline.next()
 
 		// candles at index 1
-		expect(getCandlesPastDay()).toEqual([candlesDay[0], candlesDay[1]])
-		expect(getCandlesPastHour4()).toEqual([
-			candlesHour4[0],
-			candlesHour4[1],
-			candlesHour4[2],
-			candlesHour4[3],
-			candlesHour4[4],
-			candlesHour4[5],
-			candlesHour4[6]
-		])
-
-		expect(getCandlesPresentDay()).toEqual([candlesDay[1]])
+		expect(getCurrentCandlesDay()).toEqual([candlesDay[1]])
 		// 6 candles because 6 hour4 candles is 1 day candle.
-		expect(getCandlesPresentHour4()).toEqual([
+		expect(getCurrentCandlesHour4()).toEqual([
 			candlesHour4[1],
 			candlesHour4[2],
 			candlesHour4[3],
@@ -190,26 +164,9 @@ describe('Timeline', () => {
 
 		timeline.next()
 
-		// assert contains all past and present candles
-		expect(getCandlesPastDay()).toEqual([candlesDay[0], candlesDay[1], candlesDay[2]])
-		expect(getCandlesPastHour4()).toEqual([
-			candlesHour4[0],
-			candlesHour4[1],
-			candlesHour4[2],
-			candlesHour4[3],
-			candlesHour4[4],
-			candlesHour4[5],
-			candlesHour4[6],
-			candlesHour4[7],
-			candlesHour4[8],
-			candlesHour4[9],
-			candlesHour4[10],
-			candlesHour4[11],
-			candlesHour4[12]
-		])
 		// assert contains present candles, not past
-		expect(getCandlesPresentDay()).toEqual([candlesDay[2]])
-		expect(getCandlesPresentHour4()).toEqual([
+		expect(getCurrentCandlesDay()).toEqual([candlesDay[2]])
+		expect(getCurrentCandlesHour4()).toEqual([
 			candlesHour4[7],
 			candlesHour4[8],
 			candlesHour4[9],
@@ -224,7 +181,7 @@ describe('Timeline', () => {
 
 		timeline.next()
 
-		const candlesPresentH4 = timeline.getNextCandles('GM', 'hour4')
+		const candlesPresentH4 = timeline.getCurrentCandles('GM', 'hour4')
 		const candleBuiltH4: Candle = {
 			close: candlesPresentH4[candlesPresentH4.length - 1].close,
 			high: candlesPresentH4.reduce((high, c) => Math.max(c.high, high), candlesPresentH4[0].high),
@@ -236,49 +193,6 @@ describe('Timeline', () => {
 
 		expect(timeline.getLatestCandleBuilt('GM')).toEqual(candleBuiltH4)
 		expect(timeline.getLatestCandleBuilt('AAPL')).toEqual(candlesDay[1])
-	})
-
-	test('getIndexAtTime', () => {
-		// set time to end
-		const timelineTimes = timeline.getTimeline()
-		timelineTimes.forEach((time) => timeline.setTime(time))
-
-		const indexesPast = timelineTimes.map((time) =>
-			timeline.getIndexAtTime({
-				symbol: priceHistoryPast.symbol,
-				timeframe: priceHistoryPast.timeframe,
-				time: time
-			})
-		)
-
-		const indexesFuture = timelineTimes.map((time) =>
-			timeline.getIndexAtTime({
-				symbol: priceHistoryFuture.symbol,
-				timeframe: priceHistoryFuture.timeframe,
-				time: time
-			})
-		)
-
-		const indexesMain = timelineTimes.map((time) =>
-			timeline.getIndexAtTime({
-				symbol: priceHistoryDay.symbol,
-				timeframe: priceHistoryDay.timeframe,
-				time: time
-			})
-		)
-
-		// past candles remain on last index, future candles -1, main candles increment with current index
-		expect(indexesPast.every((index) => index === priceHistoryPast.candles.length - 1)).toBe(true)
-		expect(indexesFuture.every((index) => index === -1)).toBe(true)
-		expect(indexesMain.every((index, i) => index === i)).toBe(true)
-
-		const indexNoResult = timeline.getIndexAtTime({
-			symbol: 'UNKNOWN_SYMBOL',
-			timeframe: 'day',
-			time: 3
-		})
-
-		expect(indexNoResult).toBeNull()
 	})
 
 	test('getMainTimeframe, getTime, getTimeline', () => {
