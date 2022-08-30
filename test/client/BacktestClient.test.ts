@@ -1,7 +1,7 @@
 import { Broker } from '@src/broker'
 import Timeline from '@src/broker/Timeline'
 import BacktestClient from '@src/client/BacktestClient'
-import { PriceHistoryCreateParams } from '@src/repository'
+import { Account, PriceHistoryCreateParams } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
 import { AccountService, PositionService, TriggerService } from '@src/service'
 import { Candle } from '@src/types'
@@ -18,6 +18,8 @@ describe('BacktestClient', () => {
 	let priceHistoryDay: PriceHistoryCreateParams
 	let priceHistoryHour4: PriceHistoryCreateParams
 	let priceHistoryHour4GM: PriceHistoryCreateParams
+
+	let account: Account
 
 	// 2022-08-20
 	const MS_TIME_START_AAPL = 1661002943915
@@ -105,6 +107,8 @@ describe('BacktestClient', () => {
 			priceHistoryAddional: [priceHistoryHour4, priceHistoryHour4GM],
 			startTime: MS_TIME_START_AAPL
 		})
+
+		account = entityManager.getRepository('account').get(1) as Account
 	})
 
 	test('getCandles', () => {
@@ -174,5 +178,55 @@ describe('BacktestClient', () => {
 			candlesHour4GM[6],
 			candlesHour4GM[7]
 		])
+	})
+
+	test('hasPositions', () => {
+		broker.placeOrder({
+			accountId: 1,
+			orderQty: 30,
+			orderType: 'MARKET',
+			symbol: 'AAPL',
+			type: 'LONG'
+		})
+
+		const hasOpenLong = backtestClient.hasPositions({
+			accountId: 1,
+			status: 'OPEN',
+			type: 'LONG'
+		})
+
+		const hasOpenLongGM = backtestClient.hasPositions({
+			accountId: 1,
+			status: 'OPEN',
+			symbol: 'GM',
+			type: 'LONG'
+		})
+
+		const hasPendingLong = backtestClient.hasPositions({
+			accountId: 1,
+			status: 'PENDING',
+			symbol: 'GM',
+			type: 'LONG'
+		})
+
+		expect(hasOpenLong).toBe(true)
+		expect(hasOpenLongGM).toBe(false)
+		expect(hasPendingLong).toBe(false)
+	})
+
+	test('getAccount', () => {
+		expect(backtestClient.getAccount()).toBe(account)
+	})
+
+	test('getPositions', () => {
+		const orderMarket = broker.placeOrder({
+			accountId: account.id,
+			orderQty: 30,
+			orderType: 'MARKET',
+			symbol: 'AAPL',
+			type: 'LONG'
+		})
+
+		expect(Object.values(backtestClient.getPositions())).toContain(orderMarket)
 	})
 })

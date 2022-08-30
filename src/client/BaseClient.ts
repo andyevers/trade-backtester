@@ -105,9 +105,9 @@ export default abstract class BaseClient {
 		return position
 	}
 
-	public getPositions(filters: PositionsByIdLookupFilters): PositionsById {
+	public getPositions(filters: Omit<PositionsByIdLookupFilters, 'accountId'> = {}): PositionsById {
 		const positionRepository = this.entityManager.getRepository('position')
-		return positionRepository.getByIdLookup(filters)
+		return positionRepository.getByIdLookup({ ...filters, accountId: this.accountId })
 	}
 
 	public hasPositions(params: HasPositionsParams): boolean {

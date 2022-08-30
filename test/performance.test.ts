@@ -1,28 +1,14 @@
-import Test from '@src/../unused/Test'
-import { Candle } from '@src/types'
-import process from 'process'
-import os from 'os'
-import CandleService from '@src/../unused/CandleService'
 import Broker from '@src/broker/Broker'
 import Timeline from '@src/broker/Timeline'
+import BacktestClient from '@src/client/BacktestClient'
 import EntityManager from '@src/repository/EntityManager'
-import PriceHistoryRepository, {
-	PriceHistory,
-	PriceHistoryCreateParams
-} from '@src/repository/PriceHistoryRepository'
+import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import AccountService from '@src/service/AccountService'
 import PositionService from '@src/service/PositionService'
-import { Account } from '@src/repository/AccountRepository'
 import TriggerService from '@src/service/TriggerService'
-import BacktestClient from '@src/client/BacktestClient'
+import { Candle } from '@src/types'
 
-type CandleMap = {
-	[symbol: string]: {
-		[timeframe: string]: Candle[]
-	}
-}
-
-describe('hi', () => {
+describe('Performance', () => {
 	let backtestClient: BacktestClient
 	let entityManager: EntityManager
 	let broker: Broker
@@ -38,6 +24,18 @@ describe('hi', () => {
 	const MS_TIMES = {
 		day: 86400000,
 		hour4: 14400000
+	}
+
+	const logResult = (result: { name: string; iterations: number; time: number }) => {
+		const cyan = '\x1b[36m'
+		const reset = '\x1b[0m'
+		console.log(
+			`${cyan}${result.name}${reset}`,
+			'\n',
+			`iterations: ${result.iterations.toLocaleString('en-US')}`,
+			'\n',
+			`time:       ${Math.round(result.time).toLocaleString('en-US')}ms`
+		)
 	}
 
 	const candles = (
@@ -88,9 +86,7 @@ describe('hi', () => {
 					{ open: 2, high: 4, low: 1, close: 3 },
 					{ open: 4, high: 6, low: 3, close: 5 },
 					{ open: 5, high: 7, low: 4, close: 6 },
-					{ open: 4, high: 6, low: 3, close: 5 },
-					{ open: 3, high: 5, low: 2, close: 4 },
-					{ open: 2, high: 4, low: 1, close: 3 }
+					{ open: 4, high: 6, low: 3, close: 5 }
 				]
 			)
 		}
@@ -104,19 +100,30 @@ describe('hi', () => {
 	})
 
 	test('Performance Timeline.setTime', () => {
-		let i = 0
-		console.time('timeline.setTime')
+		let i = 1
+		let time = performance.now()
 		while (timeline.next() && i < 1000000) {
 			i++
 		}
-		console.timeEnd('timeline.setTime')
+		time = performance.now() - time
 
-		console.time('Array.push')
-		const candles = []
-		for (let b = 0; b < i; b++) {
-			candles.push(priceHistoryDay.candles[b])
+		logResult({ name: 'Timeline.setTime', iterations: i, time })
+	})
+
+	test('Performance PriceHistoryRepository.getIndexNearTime', () => {
+		const ITERATIONS = 100000
+		const priceHistoryRepository = entityManager.getRepository('priceHistory')
+
+		let time = performance.now()
+		for (let i = 0; i < ITERATIONS; i++) {
+			priceHistoryRepository.getIndexNearTime({
+				symbol: 'AAPL',
+				timeframe: 'day',
+				time: MS_TIME_START_AAPL + 100 + i * MS_TIMES.day
+			})
 		}
-		console.timeEnd('Array.push')
-		console.log(`${i} iterations`)
+		time = performance.now() - time
+
+		logResult({ name: 'PriceHistoryRepository.getIndexNearTime', iterations: ITERATIONS, time })
 	})
 })
