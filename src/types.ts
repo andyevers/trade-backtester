@@ -10,8 +10,3 @@ export interface Candle {
 export interface CandleBySymbol {
 	[symbol: string]: Candle
 }
-
-export interface Strategy {
-	init(client: any): void
-	next(candleBySymbol: CandleBySymbol): void
-}

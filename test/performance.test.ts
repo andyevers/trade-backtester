@@ -113,6 +113,11 @@ describe('Performance', () => {
 	test('Performance PriceHistoryRepository.getIndexNearTime', () => {
 		const ITERATIONS = 100000
 		const priceHistoryRepository = entityManager.getRepository('priceHistory')
+		priceHistoryRepository.addCandles({
+			candles: priceHistoryDay.candles,
+			symbol: 'AAPL',
+			timeframe: 'day'
+		})
 
 		let time = performance.now()
 		for (let i = 0; i < ITERATIONS; i++) {

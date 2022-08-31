@@ -15,6 +15,8 @@ Create trading strategies and run backtests.
 
 ## TODO
 
+-   Make Broker.ts unaware of EntityManager used by BacktestClient. It should send the data to BacktestClient where it then gets stored in the EntityManager repos. This way it will function the same as live clients, where entity manager is used for caching local data and the broker acts as a live broker.
+
 ### Performance Improvements
 
--   creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.
+-   Creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.

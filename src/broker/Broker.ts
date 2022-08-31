@@ -47,7 +47,7 @@ export interface HasPositionsParams {
 	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
 }
 
-export interface PlaceOrderBrokerParams
+export interface PlaceOrderRequestParams
 	extends Omit<PositionCreateParams, 'orderTime' | 'orderPrice' | 'status'> {
 	orderPrice?: number
 }
@@ -139,7 +139,7 @@ export default class Broker {
 		return priceHistoryRepository.getCandles(params) || []
 	}
 
-	public placeOrder(params: PlaceOrderBrokerParams): Position {
+	public placeOrder(params: PlaceOrderRequestParams): Position {
 		const latestCandle = this.timeline.getLatestCandleBuilt(params.symbol)
 		const orderTime = this.timeline.getTime()
 		const order = this.accountService.placeOrder({ ...params, latestCandle, orderTime })
