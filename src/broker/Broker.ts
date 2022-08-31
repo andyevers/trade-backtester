@@ -131,14 +131,6 @@ export default class Broker {
 		return { ask: close, bid: close, time: time }
 	}
 
-	/**
-	 * TODO: remove this method. moved to BaseClient
-	 */
-	public getCandles(params: GetCandlesParams): Candle[] {
-		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
-		return priceHistoryRepository.getCandles(params) || []
-	}
-
 	public placeOrder(params: PlaceOrderRequestParams): Position {
 		const latestCandle = this.timeline.getLatestCandleBuilt(params.symbol)
 		const orderTime = this.timeline.getTime()
