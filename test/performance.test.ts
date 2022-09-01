@@ -5,9 +5,6 @@ import { Account } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import { ServiceManager } from '@src/service'
-import AccountService from '@src/service/AccountService'
-import PositionService from '@src/service/PositionService'
-import TriggerService from '@src/service/TriggerService'
 import { Candle } from '@src/types'
 
 describe('Performance', () => {
@@ -15,10 +12,6 @@ describe('Performance', () => {
 	let entityManager: EntityManager
 	let broker: Broker
 	let timeline: Timeline
-	let accountService: AccountService
-	let positionService: PositionService
-	let triggerService: TriggerService
-
 	let serviceManager: ServiceManager
 
 	let priceHistoryDay: PriceHistoryCreateParams

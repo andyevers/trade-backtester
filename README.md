@@ -21,14 +21,9 @@ Create trading strategies and run backtests.
 
 -   The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
 
+-   Maybe: We can shave of a few ms by setting repositories and services in the contructor rather than using getService and getRepository every time. possibly update this?
+
 ### Additions
-
--   Create `EventBus.ts`. These callbacks should not be used internally, all callbacks added should be user assigned. add callbacks for:
-
-    -   newCandle (fires before next)
-    -   fetchAccountResult
-    -   fetchCandlesResult
-    -   fetchPositionsResult
 
 -   Add `BacktestResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
 

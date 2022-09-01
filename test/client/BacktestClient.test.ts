@@ -1,9 +1,7 @@
 import { Broker } from '@src/broker'
-import Timeline from '@src/broker/Timeline'
 import BacktestClient from '@src/client/BacktestClient'
 import { Account, PriceHistoryCreateParams } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
-import { AccountService, PositionService, ServiceManager, TriggerService } from '@src/service'
 import { Candle } from '@src/types'
 
 describe('BacktestClient', () => {
@@ -101,7 +99,7 @@ describe('BacktestClient', () => {
 		broker.init({
 			accountIds: [accountA.id, accountB.id],
 			priceHistory: priceHistoryDay,
-			priceHistoryAddional: [priceHistoryHour4, priceHistoryHour4GM],
+			priceHistoryAdditional: [priceHistoryHour4, priceHistoryHour4GM],
 			startTime: MS_TIME_START_AAPL
 		})
 	})

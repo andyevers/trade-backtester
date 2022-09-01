@@ -1,41 +1,53 @@
-import { Broker, Timeline } from './broker'
-import { EntityManager } from './repository'
-import { AccountService, PositionService, TriggerService } from './service'
+import { Broker } from './broker'
+import { BacktestClient } from './client'
+import { EntityManager, PriceHistoryCreateParams } from './repository'
+import { Strategy } from './strategy/DemoStrategy'
 
-interface BacktesterArgs {}
+interface BacktesterArgs {
+	startingCash: number
+	startTime: number
+	priceHistory: PriceHistoryCreateParams
+	priceHistoryAdditional?: PriceHistoryCreateParams[]
+}
 
 interface BacktesterDeps {
 	EntityManagerClass: typeof EntityManager
-	AccountServiceClass: typeof AccountService
-	PositionServiceClass: typeof PositionService
-	TriggerServiceClass: typeof TriggerService
-	TimelineClass: typeof Timeline
 	BrokerClass: typeof Broker
+	BacktestClientClass: typeof BacktestClient
 }
+
+interface StrategyResults {}
 
 export default class Backtester {
 	private readonly broker: Broker
+	private readonly client: BacktestClient
 
 	constructor(args: BacktesterArgs, _deps?: BacktesterDeps) {
 		const {
-			AccountServiceClass = AccountService,
 			BrokerClass = Broker,
 			EntityManagerClass = EntityManager,
-			PositionServiceClass = PositionService,
-			TimelineClass = Timeline,
-			TriggerServiceClass = TriggerService
+			BacktestClientClass = BacktestClient
 		} = _deps || {}
 
-		const entityManager = new EntityManagerClass()
-		const broker = new BrokerClass({ entityManager })
-		// const broker = new BrokerClass({
-		// 	// accountService,
-		// 	entityManager,
-		// 	// positionService,
-		// 	timeline
-		// 	// triggerService
-		// })
+		const { priceHistory, startingCash, priceHistoryAdditional = [] } = args
 
-		this.broker = broker
+		const entityManager = new EntityManagerClass()
+		const account = entityManager.getRepository('account').create({ startingCash })
+
+		this.broker = new BrokerClass({ entityManager })
+		this.client = new BacktestClientClass({ entityManager, broker: this.broker, accountId: account.id })
+
+		this.broker.init({
+			accountIds: [account.id],
+			priceHistory,
+			startTime: priceHistory.candles[0].time,
+			priceHistoryAdditional
+		})
+	}
+
+	public runTest(strategy: Strategy): StrategyResults {
+		strategy.init(this.client)
+
+		return {}
 	}
 }

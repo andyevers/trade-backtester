@@ -18,8 +18,10 @@ export interface Strategy {
 }
 
 class DemoStrategy implements Strategy {
+	private client!: BaseClient
+
 	init(client: BaseClient): void {
-		console.log('init')
+		this.client = client
 	}
 
 	next(candleBySymbol: CandleBySymbol): void {

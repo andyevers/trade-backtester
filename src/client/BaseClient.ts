@@ -18,6 +18,7 @@ import EventBus from './EventBus'
 export interface BaseClientArgs {
 	entityManager?: EntityManager
 	eventBus?: EventBus
+	accountId?: number
 }
 
 export interface FetchPositionsParams extends Omit<PositionsByIdLookupFilters, 'accountId'> {}
@@ -74,12 +75,10 @@ export default abstract class BaseClient {
 	protected readonly eventBus: EventBus
 
 	constructor(args: BaseClientArgs) {
-		const { entityManager = new EntityManager(), eventBus = new EventBus() } = args
+		const { entityManager = new EntityManager(), eventBus = new EventBus(), accountId = 1 } = args
 		this.entityManager = entityManager
 		this.eventBus = eventBus
-
-		// TODO: get accountId from entityManager
-		this.accountId = 1
+		this.accountId = accountId
 	}
 
 	/**

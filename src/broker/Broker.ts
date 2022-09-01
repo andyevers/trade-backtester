@@ -10,7 +10,7 @@ import {
 	PriceHistoryCreateParams,
 	TimeframeType
 } from '../repository'
-import { AccountService, PositionService, ServiceManager, TriggerService } from '../service'
+import { ServiceManager } from '../service'
 import Timeline, { NewCandleData } from './Timeline'
 
 export interface BrokerArgs {
@@ -54,7 +54,7 @@ export interface Quote {
 
 export interface BrokerInitParams {
 	priceHistory: PriceHistoryCreateParams
-	priceHistoryAddional?: PriceHistoryCreateParams[]
+	priceHistoryAdditional?: PriceHistoryCreateParams[]
 	accountIds: number[]
 	startTime: number
 }
@@ -91,7 +91,7 @@ export default class Broker {
 	}
 
 	public init(params: BrokerInitParams): void {
-		const { priceHistory, priceHistoryAddional = [], accountIds, startTime } = params
+		const { priceHistory, priceHistoryAdditional = [], accountIds, startTime } = params
 
 		if (startTime < priceHistory.candles[0].time) {
 			throw new Error('Start time cannot be before the first candle time in price history')
@@ -105,7 +105,7 @@ export default class Broker {
 			if (account) accounts.push(account)
 		}
 
-		this.timeline.setPriceHistory([priceHistory, ...priceHistoryAddional])
+		this.timeline.setPriceHistory([priceHistory, ...priceHistoryAdditional])
 		this.timeline.initFromPriceHistory(priceHistory.symbol, priceHistory.timeframe, {
 			onNewCandle: this.onNewCandle,
 			onNewCandleBuilt: this.onNewCandleBuilt
