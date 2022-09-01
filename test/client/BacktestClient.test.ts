@@ -183,40 +183,6 @@ describe('BacktestClient', () => {
 		])
 	})
 
-	test('hasPositions', () => {
-		broker.placeOrder({
-			accountId: 1,
-			orderQty: 30,
-			orderType: 'MARKET',
-			symbol: 'AAPL',
-			type: 'LONG'
-		})
-
-		const hasOpenLong = backtestClient.hasPositions({
-			accountId: 1,
-			status: 'OPEN',
-			type: 'LONG'
-		})
-
-		const hasOpenLongGM = backtestClient.hasPositions({
-			accountId: 1,
-			status: 'OPEN',
-			symbol: 'GM',
-			type: 'LONG'
-		})
-
-		const hasPendingLong = backtestClient.hasPositions({
-			accountId: 1,
-			status: 'PENDING',
-			symbol: 'GM',
-			type: 'LONG'
-		})
-
-		expect(hasOpenLong).toBe(true)
-		expect(hasOpenLongGM).toBe(false)
-		expect(hasPendingLong).toBe(false)
-	})
-
 	test('getAccount', () => {
 		expect(backtestClient.getAccount()).toBe(accountA)
 	})
@@ -231,5 +197,35 @@ describe('BacktestClient', () => {
 		})
 
 		expect(Object.values(backtestClient.getPositions())).toContain(orderMarket)
+	})
+
+	test('hasPositions', () => {
+		backtestClient.placeOrder({
+			orderQty: 30,
+			orderType: 'MARKET',
+			symbol: 'AAPL',
+			type: 'LONG'
+		})
+
+		const hasOpenLong = backtestClient.hasPositions({
+			status: 'OPEN',
+			type: 'LONG'
+		})
+
+		const hasOpenLongGM = backtestClient.hasPositions({
+			status: 'OPEN',
+			symbol: 'GM',
+			type: 'LONG'
+		})
+
+		const hasPendingLong = backtestClient.hasPositions({
+			status: 'PENDING',
+			symbol: 'GM',
+			type: 'LONG'
+		})
+
+		expect(hasOpenLong).toBe(true)
+		expect(hasOpenLongGM).toBe(false)
+		expect(hasPendingLong).toBe(false)
 	})
 })

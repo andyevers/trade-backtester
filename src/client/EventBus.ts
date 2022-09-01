@@ -13,11 +13,6 @@ export type EventBusEvents = {
 	responseFetchPriceHistory: ResponseFetchPriceHistory
 	responseFetchAccount: ResponseFetchAccount
 	responseFetchPositions: ResponseFetchPositions
-	newCandles: {
-		candleBySymbol: {
-			[symbol: string]: Candle
-		}
-	}
 }
 
 export type EventBusCallback<T extends keyof EventBusEvents> = (data: EventBusEvents[T]) => void
@@ -32,8 +27,7 @@ export default class EventBus {
 		responseCloseOrder: {},
 		responseFetchAccount: {},
 		responseFetchPriceHistory: {},
-		responseFetchPositions: {},
-		newCandles: {}
+		responseFetchPositions: {}
 	}
 
 	public dispatch<T extends keyof EventBusEvents>(eType: T, data: EventBusEvents[T]) {

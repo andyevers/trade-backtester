@@ -1,9 +1,4 @@
-import {
-	GetIndexAtTimeParams,
-	PriceHistoryCreateParams,
-	SymbolTimeframeKey,
-	TimeframeType
-} from '../repository'
+import { PriceHistoryCreateParams, SymbolTimeframeKey, TimeframeType } from '../repository'
 import { Candle } from '../types'
 
 interface CandlesBySymbolTimeframe {

@@ -1,18 +1,16 @@
 import {
-	EntityManager,
-	TimeframeType,
 	Account,
-	PositionsById,
-	PositionType,
-	PositionCreateParams,
+	EntityManager,
 	Position,
-	PriceHistoryCreateParams,
-	AccountCreateParams,
+	PositionCreateParams,
+	PositionsById,
+	PositionsByIdLookupFilters,
+	PositionType,
 	PriceHistory,
-	PositionsByIdLookupFilters
+	PriceHistoryCreateParams,
+	TimeframeType
 } from '../repository'
-import { PositionService, AccountService, TriggerService } from '../service'
-import { Candle } from '../types'
+import { AccountService, PositionService, TriggerService } from '../service'
 import Timeline, { NewCandleData } from './Timeline'
 
 export interface BrokerArgs {
@@ -42,13 +40,6 @@ export interface CloseOrderRequestParams {
 	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
 }
 
-export interface HasPositionsParams {
-	accountId: number
-	symbol?: string
-	type?: PositionType
-	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
-}
-
 export interface PlaceOrderRequestParams
 	extends Omit<PositionCreateParams, 'orderTime' | 'orderPrice' | 'status'> {
 	orderPrice?: number
@@ -65,12 +56,6 @@ export interface BrokerInitParams {
 	priceHistoryAddional?: PriceHistoryCreateParams[]
 	accountIds: number[]
 	startTime: number
-}
-
-interface GetPositionsParams {
-	accountId: number
-	symbol?: string
-	type?: PositionType
 }
 
 /**
@@ -109,7 +94,7 @@ export default class Broker {
 			if (account) accounts.push(account)
 		}
 
-		this.timeline.setPriceHistory([...priceHistoryAddional, priceHistory])
+		this.timeline.setPriceHistory([priceHistory, ...priceHistoryAddional])
 		this.timeline.initFromPriceHistory(priceHistory.symbol, priceHistory.timeframe, {
 			onNewCandle: this.onNewCandle,
 			onNewCandleBuilt: this.onNewCandleBuilt
@@ -118,7 +103,6 @@ export default class Broker {
 		this.timeline.setStartTime(startTime)
 	}
 
-	// must be arrow function to pass to next()
 	private onNewCandleBuilt = (data: NewCandleData): void => {
 		const { candle, symbol } = data
 		this.triggerService.processCandle(symbol, candle)
@@ -184,20 +168,6 @@ export default class Broker {
 
 		return closedOrders
 	}
-
-	/**
-	 * TODO: remove this method. moved to BaseClient
-	 */
-	public hasPositions(params: HasPositionsParams): boolean {
-		const { accountId, status, type, symbol } = params
-		const positionRepository = this.entityManager.getRepository('position')
-		const positionsById = positionRepository.getByIdLookup({ accountId, status, type, symbol })
-
-		for (const _ in positionsById) return true
-		return false
-	}
-
-	// PositionsByIdLookupFilters
 
 	public getPositions(params: PositionsByIdLookupFilters): PositionsById {
 		const { accountId, status, type, symbol } = params

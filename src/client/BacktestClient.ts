@@ -1,7 +1,11 @@
 import { Broker } from '@src/broker'
 import { GetCandlesParams } from '@src/repository'
-import { CloseOrdersParams, PlaceOrderParams } from '@src/service'
-import BaseClient, { BaseClientArgs, FetchPositionsParams } from './BaseClient'
+import BaseClient, {
+	BaseClientArgs,
+	CloseOrdersParams,
+	FetchPositionsParams,
+	PlaceOrderParams
+} from './BaseClient'
 import EventBus from './EventBus'
 
 export interface BacktestClientArgs extends BaseClientArgs {
@@ -55,7 +59,7 @@ export default class BacktestClient extends BaseClient {
 		})
 	}
 
-	public placeOrder(params: Omit<PlaceOrderParams, 'accountId'>): void {
+	public placeOrder(params: PlaceOrderParams): void {
 		const position = this.broker.placeOrder({
 			orderType: 'MARKET',
 			...params,
@@ -69,7 +73,7 @@ export default class BacktestClient extends BaseClient {
 		})
 	}
 
-	public closeOrders(params: Omit<CloseOrdersParams, 'accountId'>): void {
+	public closeOrders(params: CloseOrdersParams): void {
 		const positions = this.broker.closeOrders({
 			...params,
 			accountId: this.accountId

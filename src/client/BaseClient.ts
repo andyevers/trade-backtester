@@ -1,16 +1,17 @@
-import { HasPositionsParams } from '../broker'
 import {
 	Account,
 	AddCandleParams,
 	EntityManager,
 	GetCandlesParams,
 	Position,
+	PositionOrderDuration,
+	PositionOrderType,
 	PositionsById,
 	PositionsByIdLookupFilters,
+	PositionType,
 	PriceHistory,
 	RepositoriesByName
 } from '../repository'
-import { CloseOrdersParams, PlaceOrderParams } from '../service'
 import { Candle } from '../types'
 import EventBus from './EventBus'
 
@@ -40,6 +41,30 @@ export type ResponseFetchAccount = ClientResponseData<Account>
 export type ResponseFetchPriceHistory = ClientResponseData<Omit<PriceHistory, 'id'>>
 export type ResponsePlaceOrder = ClientResponseData<Position>
 export type ResponseCloseOrders = ClientResponseData<Position[]>
+
+export interface HasPositionsParams {
+	symbol?: string
+	type?: PositionType
+	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
+}
+
+export interface PlaceOrderParams {
+	orderQty: number
+	symbol: string
+	type: PositionType
+	orderType?: PositionOrderType
+	orderDuration?: PositionOrderDuration
+	stopLoss?: number | null
+	takeProfit?: number | null
+	trailingStop?: number | null
+}
+
+export interface CloseOrdersParams {
+	positionId?: number
+	symbol?: string
+	type?: PositionType
+	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
+}
 
 // TODO: Add EventBus to capture response from async methods.
 
@@ -148,9 +173,14 @@ export default abstract class BaseClient {
 	}
 
 	public hasPositions(params: HasPositionsParams): boolean {
-		const { accountId, status, type, symbol } = params
+		const { status, type, symbol } = params
 		const positionRepository = this.entityManager.getRepository('position')
-		const positionsById = positionRepository.getByIdLookup({ accountId, status, type, symbol })
+		const positionsById = positionRepository.getByIdLookup({
+			accountId: this.accountId,
+			status,
+			type,
+			symbol
+		})
 
 		for (const _ in positionsById) return true
 		return false

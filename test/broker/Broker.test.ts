@@ -109,40 +109,6 @@ describe('Broker', () => {
 		})
 	})
 
-	test('hasPositions', () => {
-		broker.placeOrder({
-			accountId: account.id,
-			orderQty: 30,
-			orderType: 'MARKET',
-			symbol: 'AAPL',
-			type: 'LONG'
-		})
-
-		const hasOpenLong = broker.hasPositions({
-			accountId: account.id,
-			status: 'OPEN',
-			type: 'LONG'
-		})
-
-		const hasOpenLongGM = broker.hasPositions({
-			accountId: account.id,
-			status: 'OPEN',
-			symbol: 'GM',
-			type: 'LONG'
-		})
-
-		const hasPendingLong = broker.hasPositions({
-			accountId: account.id,
-			status: 'PENDING',
-			symbol: 'GM',
-			type: 'LONG'
-		})
-
-		expect(hasOpenLong).toBe(true)
-		expect(hasOpenLongGM).toBe(false)
-		expect(hasPendingLong).toBe(false)
-	})
-
 	test('getAccount', () => {
 		const orderMarket = broker.placeOrder({
 			accountId: account.id,

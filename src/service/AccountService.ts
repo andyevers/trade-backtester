@@ -13,7 +13,7 @@ export interface AccountServiceArgs {
 	positionService: PositionService
 }
 
-export interface PlaceOrderParams {
+export interface PlaceOrderAccountParams {
 	accountId: number
 	orderQty: number
 	symbol: string
@@ -28,7 +28,7 @@ export interface PlaceOrderParams {
 	latestCandle?: Candle | null
 }
 
-export interface CloseOrdersParams {
+export interface CloseOrderAccountParams {
 	id: number
 	orderExitTime: number
 	orderExitPrice?: number
@@ -152,14 +152,14 @@ export default class AccountService {
 	}
 
 	private createPendingOrder(
-		params: Omit<Required<PlaceOrderParams>, 'latestCandle'>
+		params: Omit<Required<PlaceOrderAccountParams>, 'latestCandle'>
 	): Position<'PENDING'> {
 		const positionRepository = this.entityManager.getRepository('position')
 		const position = positionRepository.create({ ...params, status: 'PENDING' })
 		return position
 	}
 
-	public placeOrder(params: PlaceOrderParams): Position {
+	public placeOrder(params: PlaceOrderAccountParams): Position {
 		const {
 			accountId,
 			orderQty,
@@ -208,7 +208,7 @@ export default class AccountService {
 		return position
 	}
 
-	public closeOrder(params: CloseOrdersParams): Position {
+	public closeOrder(params: CloseOrderAccountParams): Position {
 		const { id, orderExitTime, latestCandle = null, orderExitPrice = latestCandle?.time || null } = params
 
 		const isMismatchTime = latestCandle && latestCandle.time !== orderExitTime
