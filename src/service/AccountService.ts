@@ -28,7 +28,7 @@ export interface PlaceOrderParams {
 	latestCandle?: Candle | null
 }
 
-export interface CloseOrderParams {
+export interface CloseOrdersParams {
 	id: number
 	orderExitTime: number
 	orderExitPrice?: number
@@ -208,7 +208,7 @@ export default class AccountService {
 		return position
 	}
 
-	public closeOrder(params: CloseOrderParams): Position {
+	public closeOrder(params: CloseOrdersParams): Position {
 		const { id, orderExitTime, latestCandle = null, orderExitPrice = latestCandle?.time || null } = params
 
 		const isMismatchTime = latestCandle && latestCandle.time !== orderExitTime

@@ -19,6 +19,8 @@ Create trading strategies and run backtests.
 
 -   Maybe: Make Broker.ts unaware of EntityManager used by BacktestClient. It should send the data to BacktestClient where it then gets stored in the EntityManager repos. This way it will function the same as live clients, where entity manager is used for caching local data and the broker acts as a live broker.
 
+-   The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
+
 ### Additions
 
 -   Create `EventBus.ts`. These callbacks should not be used internally, all callbacks added should be user assigned. add callbacks for:

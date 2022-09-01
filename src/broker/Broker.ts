@@ -7,7 +7,9 @@ import {
 	PositionCreateParams,
 	Position,
 	PriceHistoryCreateParams,
-	AccountCreateParams
+	AccountCreateParams,
+	PriceHistory,
+	PositionsByIdLookupFilters
 } from '../repository'
 import { PositionService, AccountService, TriggerService } from '../service'
 import { Candle } from '../types'
@@ -63,6 +65,12 @@ export interface BrokerInitParams {
 	priceHistoryAddional?: PriceHistoryCreateParams[]
 	accountIds: number[]
 	startTime: number
+}
+
+interface GetPositionsParams {
+	accountId: number
+	symbol?: string
+	type?: PositionType
 }
 
 /**
@@ -140,7 +148,14 @@ export default class Broker {
 		return order
 	}
 
-	public closeOrder(params: CloseOrderRequestParams): Position[] {
+	public getPriceHistory(params: GetCandlesParams): Omit<PriceHistory, 'id'> {
+		const { symbol, timeframe } = params
+		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
+		const candles = priceHistoryRepository.getCandles(params)
+		return { symbol, timeframe, candles }
+	}
+
+	public closeOrders(params: CloseOrderRequestParams): Position[] {
 		const { positionId, accountId, status = 'OPEN_PENDING', type, symbol } = params
 		const positionRepository = this.entityManager.getRepository('position')
 
@@ -182,20 +197,27 @@ export default class Broker {
 		return false
 	}
 
+	// PositionsByIdLookupFilters
+
+	public getPositions(params: PositionsByIdLookupFilters): PositionsById {
+		const { accountId, status, type, symbol } = params
+		const positionRepository = this.entityManager.getRepository('position')
+		const positionsById = positionRepository.getByIdLookup({ accountId, status, type, symbol })
+
+		return positionsById
+	}
+
 	/**
 	 * TODO: remove this method. moved to BaseClient
 	 */
-	public getAccount(accountId: number): AccountWithPositions {
+	public getAccount(accountId: number): Account {
 		const accountRepository = this.entityManager.getRepository('account')
-		const positionRepository = this.entityManager.getRepository('position')
-
 		const account = accountRepository.get(accountId)
-		const positionsById = positionRepository.getByIdLookup({ accountId })
 
 		if (!account) {
 			throw new Error('Could not get account')
 		}
-		return { ...account, positionsById }
+		return account
 	}
 
 	public next(): boolean {

@@ -10,45 +10,82 @@ import {
 	PriceHistory,
 	RepositoriesByName
 } from '../repository'
-import { CloseOrderParams, PlaceOrderParams } from '../service'
+import { CloseOrdersParams, PlaceOrderParams } from '../service'
 import { Candle } from '../types'
+import EventBus from './EventBus'
 
 export interface BaseClientArgs {
 	entityManager?: EntityManager
+	eventBus?: EventBus
 }
+
+export interface FetchPositionsParams extends Omit<PositionsByIdLookupFilters, 'accountId'> {}
+
+type ClientResponseData<T extends Record<string, any>> =
+	| {
+			headers: Record<string, string | number>
+			data: T
+			status: 'success'
+	  }
+	| {
+			headers: Record<string, string | number>
+			data: {
+				error: string
+			}
+			status: 'error'
+	  }
+
+export type ResponseFetchPositions = ClientResponseData<PositionsById>
+export type ResponseFetchAccount = ClientResponseData<Account>
+export type ResponseFetchPriceHistory = ClientResponseData<Omit<PriceHistory, 'id'>>
+export type ResponsePlaceOrder = ClientResponseData<Position>
+export type ResponseCloseOrders = ClientResponseData<Position[]>
 
 // TODO: Add EventBus to capture response from async methods.
 
 export default abstract class BaseClient {
 	protected readonly accountId: number
 	protected readonly entityManager: EntityManager
+	protected readonly eventBus: EventBus
 
 	constructor(args: BaseClientArgs) {
-		// TODO: get accountId from entityManager
-		const { entityManager = new EntityManager() } = args
+		const { entityManager = new EntityManager(), eventBus = new EventBus() } = args
 		this.entityManager = entityManager
+		this.eventBus = eventBus
+
+		// TODO: get accountId from entityManager
 		this.accountId = 1
 	}
 
 	/**
 	 * Fetches account from the server and caches it.
+	 * After cache, Response is to ResponseFetchAccount and calls EventBus
+	 */
+	public abstract fetchPositions(params: FetchPositionsParams): void
+
+	/**
+	 * Fetches account from the server and caches it.
+	 * After cache, Response is to ResponseFetchAccount and calls EventBus
 	 */
 	public abstract fetchAccount(): void
 
 	/**
 	 * Fetches priceHistory from the server and caches it.
+	 * After cache, Response is to ResponseFetchPriceHistory and calls EventBus
 	 */
 	public abstract fetchPriceHistory(params: GetCandlesParams): void
 
 	/**
 	 * Sends order to the server. Does not wait for response.
+	 * After cache, Response is to ResponsePlaceOrder and calls EventBus
 	 */
 	public abstract placeOrder(params: PlaceOrderParams): void
 
 	/**
-	 * Sends close order to the server. Does not wait for response.
+	 * Sends close orders to the server. Does not wait for response.
+	 * After cache, Response is to ResponseCloseOrders and calls EventBus
 	 */
-	public abstract closeOrder(params: CloseOrderParams): void
+	public abstract closeOrders(params: CloseOrdersParams): void
 
 	/**
 	 * Stores an entity in a repository.

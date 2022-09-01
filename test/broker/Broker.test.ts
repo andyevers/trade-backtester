@@ -158,7 +158,6 @@ describe('Broker', () => {
 		expect(accountWithPositions.cash).toBe(account.cash)
 		expect(accountWithPositions.marginDebt).toBe(account.marginDebt)
 		expect(accountWithPositions.startingCash).toBe(account.startingCash)
-		expect(Object.values(accountWithPositions.positionsById)).toContain(orderMarket)
 	})
 
 	test('closeOrder', () => {
@@ -179,7 +178,7 @@ describe('Broker', () => {
 			type: 'LONG'
 		})
 
-		broker.closeOrder({
+		broker.closeOrders({
 			accountId: account.id,
 			status: 'OPEN_PENDING'
 		})
@@ -204,7 +203,7 @@ describe('Broker', () => {
 			type: 'LONG'
 		})
 
-		broker.closeOrder({
+		broker.closeOrders({
 			accountId: account.id,
 			status: 'OPEN'
 		})
@@ -229,7 +228,7 @@ describe('Broker', () => {
 			type: 'LONG'
 		})
 
-		broker.closeOrder({
+		broker.closeOrders({
 			accountId: account.id,
 			symbol: 'TSLA'
 		})
