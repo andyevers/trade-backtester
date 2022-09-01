@@ -19,7 +19,8 @@ describe('BacktestClient', () => {
 	let priceHistoryHour4: PriceHistoryCreateParams
 	let priceHistoryHour4GM: PriceHistoryCreateParams
 
-	let account: Account
+	let accountA: Account
+	let accountB: Account
 
 	// 2022-08-20
 	const MS_TIME_START_AAPL = 1661002943915
@@ -101,14 +102,16 @@ describe('BacktestClient', () => {
 			])
 		}
 
+		const accountRepository = entityManager.getRepository('account')
+		accountA = accountRepository.create({ startingCash: 20000 })
+		accountB = accountRepository.create({ startingCash: 10000 })
+
 		broker.init({
-			accounts: [{ startingCash: 20000 }, { startingCash: 10000 }],
+			accountIds: [accountA.id, accountB.id],
 			priceHistory: priceHistoryDay,
 			priceHistoryAddional: [priceHistoryHour4, priceHistoryHour4GM],
 			startTime: MS_TIME_START_AAPL
 		})
-
-		account = entityManager.getRepository('account').get(1) as Account
 	})
 
 	test('getCandles', () => {
@@ -215,12 +218,12 @@ describe('BacktestClient', () => {
 	})
 
 	test('getAccount', () => {
-		expect(backtestClient.getAccount()).toBe(account)
+		expect(backtestClient.getAccount()).toBe(accountA)
 	})
 
 	test('getPositions', () => {
 		const orderMarket = broker.placeOrder({
-			accountId: account.id,
+			accountId: accountA.id,
 			orderQty: 30,
 			orderType: 'MARKET',
 			symbol: 'AAPL',

@@ -15,7 +15,24 @@ Create trading strategies and run backtests.
 
 ## TODO
 
--   Make Broker.ts unaware of EntityManager used by BacktestClient. It should send the data to BacktestClient where it then gets stored in the EntityManager repos. This way it will function the same as live clients, where entity manager is used for caching local data and the broker acts as a live broker.
+### Changes
+
+-   Maybe: Make Broker.ts unaware of EntityManager used by BacktestClient. It should send the data to BacktestClient where it then gets stored in the EntityManager repos. This way it will function the same as live clients, where entity manager is used for caching local data and the broker acts as a live broker.
+
+### Additions
+
+-   Create `EventBus.ts`. These callbacks should not be used internally, all callbacks added should be user assigned. add callbacks for:
+
+    -   newCandle (fires before next)
+    -   fetchAccountResult
+    -   fetchCandlesResult
+    -   fetchPositionsResult
+
+-   Add `BacktestResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
+
+-   In `Backtester.ts`, add function to run a strategy (fires init and next).
+
+-   In `Backtester.ts`, add function to analyze strategy results. (consider adding a Results)
 
 ### Performance Improvements
 

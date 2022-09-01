@@ -1,6 +1,7 @@
 import { Broker } from '@src/broker'
 import { GetCandlesParams } from '@src/repository'
 import { CloseOrderParams, PlaceOrderParams } from '@src/service'
+import { Candle } from '@src/types'
 import BaseClient, { BaseClientArgs } from './BaseClient'
 
 export interface BacktestClientArgs extends BaseClientArgs {

@@ -16,3 +16,13 @@ export interface Strategy {
 	init(client: BaseClient): void
 	next(candleBySymbol: CandleBySymbol): void
 }
+
+class DemoStrategy implements Strategy {
+	init(client: BaseClient): void {
+		console.log('init')
+	}
+
+	next(candleBySymbol: CandleBySymbol): void {
+		console.log('next')
+	}
+}

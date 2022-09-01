@@ -61,7 +61,7 @@ export interface Quote {
 export interface BrokerInitParams {
 	priceHistory: PriceHistoryCreateParams
 	priceHistoryAddional?: PriceHistoryCreateParams[]
-	accounts: AccountCreateParams[]
+	accountIds: number[]
 	startTime: number
 }
 
@@ -87,7 +87,7 @@ export default class Broker {
 	}
 
 	public init(params: BrokerInitParams): void {
-		const { priceHistory, priceHistoryAddional = [], accounts, startTime } = params
+		const { priceHistory, priceHistoryAddional = [], accountIds, startTime } = params
 
 		if (startTime < priceHistory.candles[0].time) {
 			throw new Error('Start time cannot be before the first candle time in price history')
@@ -95,8 +95,10 @@ export default class Broker {
 
 		const accountRepository = this.entityManager.getRepository('account')
 
-		for (const account of accounts) {
-			accountRepository.create(account)
+		const accounts: Account[] = []
+		for (const accountId of accountIds) {
+			const account = accountRepository.get(accountId)
+			if (account) accounts.push(account)
 		}
 
 		this.timeline.setPriceHistory([...priceHistoryAddional, priceHistory])
