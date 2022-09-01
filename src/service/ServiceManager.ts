@@ -3,7 +3,7 @@ import AccountService from './AccountService'
 import PositionService from './PositionService'
 import TriggerService from './TriggerService'
 
-interface ServiceManagerArgs {
+export interface ServiceManagerArgs {
 	entityManager: EntityManager
 	services?: {
 		account: AccountService
@@ -12,13 +12,13 @@ interface ServiceManagerArgs {
 	}
 }
 
-type ServicesByName = {
+export type ServicesByName = {
 	account: AccountService
 	trigger: TriggerService
 	position: PositionService
 }
 
-class ServiceManager {
+export default class ServiceManager {
 	private readonly services: {
 		[K in keyof ServicesByName]: ServicesByName[K]
 	}

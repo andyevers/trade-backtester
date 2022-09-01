@@ -3,17 +3,11 @@ import Timeline from '@src/broker/Timeline'
 import { Account } from '@src/repository/AccountRepository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
-import AccountService from '@src/service/AccountService'
-import PositionService from '@src/service/PositionService'
-import TriggerService from '@src/service/TriggerService'
 import { Candle } from '@src/types'
 
 describe('Broker', () => {
 	let entityManager: EntityManager
 	let timeline: Timeline
-	let positionService: PositionService
-	let accountService: AccountService
-	let triggerService: TriggerService
 
 	let broker: Broker
 	let account: Account
@@ -45,12 +39,8 @@ describe('Broker', () => {
 
 	beforeEach(() => {
 		entityManager = new EntityManager()
-		timeline = new Timeline()
-		positionService = new PositionService({ entityManager })
-		accountService = new AccountService({ entityManager, positionService })
-		triggerService = new TriggerService({ entityManager, accountService })
-
-		broker = new Broker({ accountService, entityManager, positionService, timeline, triggerService })
+		broker = new Broker({ entityManager })
+		timeline = broker.getTimeline()
 		account = entityManager.getRepository('account').create({ startingCash: 5000 })
 
 		const priceHistoryArr: PriceHistoryCreateParams[] = []

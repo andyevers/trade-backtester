@@ -4,6 +4,7 @@ import BacktestClient from '@src/client/BacktestClient'
 import { Account } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
+import { ServiceManager } from '@src/service'
 import AccountService from '@src/service/AccountService'
 import PositionService from '@src/service/PositionService'
 import TriggerService from '@src/service/TriggerService'
@@ -17,6 +18,8 @@ describe('Performance', () => {
 	let accountService: AccountService
 	let positionService: PositionService
 	let triggerService: TriggerService
+
+	let serviceManager: ServiceManager
 
 	let priceHistoryDay: PriceHistoryCreateParams
 
@@ -56,12 +59,10 @@ describe('Performance', () => {
 
 	beforeEach(() => {
 		entityManager = new EntityManager()
-		timeline = new Timeline()
-		positionService = new PositionService({ entityManager })
-		accountService = new AccountService({ entityManager, positionService })
-		triggerService = new TriggerService({ entityManager, accountService })
-		broker = new Broker({ entityManager, timeline, accountService, positionService, triggerService })
+		serviceManager = new ServiceManager({ entityManager })
+		broker = new Broker({ entityManager, serviceManager })
 		backtestClient = new BacktestClient({ entityManager, broker })
+		timeline = broker.getTimeline()
 
 		priceHistoryDay = {
 			symbol: 'AAPL',

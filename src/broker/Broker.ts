@@ -10,15 +10,16 @@ import {
 	PriceHistoryCreateParams,
 	TimeframeType
 } from '../repository'
-import { AccountService, PositionService, TriggerService } from '../service'
+import { AccountService, PositionService, ServiceManager, TriggerService } from '../service'
 import Timeline, { NewCandleData } from './Timeline'
 
 export interface BrokerArgs {
 	entityManager: EntityManager
-	timeline: Timeline
-	positionService: PositionService
-	accountService: AccountService
-	triggerService: TriggerService
+	serviceManager?: ServiceManager
+	timeline?: Timeline
+	// positionService: PositionService
+	// accountService: AccountService
+	// triggerService: TriggerService
 }
 
 export interface GetCandlesParams {
@@ -63,16 +64,26 @@ export interface BrokerInitParams {
  */
 export default class Broker {
 	private readonly entityManager: EntityManager
-	private readonly accountService: AccountService
 	private readonly timeline: Timeline
-	private readonly triggerService: TriggerService
+	private readonly serviceManager: ServiceManager
 
 	constructor(args: BrokerArgs) {
-		const { entityManager, timeline, accountService, triggerService } = args
+		const {
+			entityManager,
+			timeline = new Timeline(),
+			serviceManager = new ServiceManager({ entityManager })
+		} = args
 		this.entityManager = entityManager
-		this.accountService = accountService
 		this.timeline = timeline
-		this.triggerService = triggerService
+		this.serviceManager = serviceManager
+	}
+
+	public getServiceManager(): ServiceManager {
+		return this.serviceManager
+	}
+
+	public getTimeline(): Timeline {
+		return this.timeline
 	}
 
 	public getEntityManager(): EntityManager {
@@ -105,7 +116,8 @@ export default class Broker {
 
 	private onNewCandleBuilt = (data: NewCandleData): void => {
 		const { candle, symbol } = data
-		this.triggerService.processCandle(symbol, candle)
+		const triggerService = this.serviceManager.getService('trigger')
+		triggerService.processCandle(symbol, candle)
 	}
 
 	private onNewCandle = (data: NewCandleData): void => {
@@ -126,9 +138,10 @@ export default class Broker {
 	}
 
 	public placeOrder(params: PlaceOrderRequestParams): Position {
+		const accountService = this.serviceManager.getService('account')
 		const latestCandle = this.timeline.getLatestCandleBuilt(params.symbol)
 		const orderTime = this.timeline.getTime()
-		const order = this.accountService.placeOrder({ ...params, latestCandle, orderTime })
+		const order = accountService.placeOrder({ ...params, latestCandle, orderTime })
 		return order
 	}
 
@@ -141,6 +154,7 @@ export default class Broker {
 
 	public closeOrders(params: CloseOrderRequestParams): Position[] {
 		const { positionId, accountId, status = 'OPEN_PENDING', type, symbol } = params
+		const accountService = this.serviceManager.getService('account')
 		const positionRepository = this.entityManager.getRepository('position')
 
 		const orderExitTime = this.timeline.getTime()
@@ -156,13 +170,13 @@ export default class Broker {
 			if (!quote) {
 				// no quote when there are no past candles found for that symbol. places a market close order that will be triggered
 				// when a candle appears.
-				this.accountService.closeOrder({ id: position.id, orderExitTime })
+				accountService.closeOrder({ id: position.id, orderExitTime })
 				closedOrders.push(position)
 				continue
 			}
 			const orderExitPrice = position.type === 'LONG' ? quote.bid : quote.ask
 			const latestCandle = this.timeline.getLatestCandleBuilt(position.symbol)
-			this.accountService.closeOrder({ id: position.id, orderExitTime, orderExitPrice, latestCandle })
+			accountService.closeOrder({ id: position.id, orderExitTime, orderExitPrice, latestCandle })
 			closedOrders.push(position)
 		}
 

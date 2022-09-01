@@ -27,17 +27,14 @@ export default class Backtester {
 		} = _deps || {}
 
 		const entityManager = new EntityManagerClass()
-		const positionService = new PositionServiceClass({ entityManager })
-		const accountService = new AccountServiceClass({ entityManager, positionService })
-		const triggerService = new TriggerServiceClass({ entityManager, accountService })
-		const timeline = new TimelineClass()
-		const broker = new BrokerClass({
-			accountService,
-			entityManager,
-			positionService,
-			timeline,
-			triggerService
-		})
+		const broker = new BrokerClass({ entityManager })
+		// const broker = new BrokerClass({
+		// 	// accountService,
+		// 	entityManager,
+		// 	// positionService,
+		// 	timeline
+		// 	// triggerService
+		// })
 
 		this.broker = broker
 	}

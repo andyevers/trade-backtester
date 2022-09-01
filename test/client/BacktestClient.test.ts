@@ -3,17 +3,13 @@ import Timeline from '@src/broker/Timeline'
 import BacktestClient from '@src/client/BacktestClient'
 import { Account, PriceHistoryCreateParams } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
-import { AccountService, PositionService, TriggerService } from '@src/service'
+import { AccountService, PositionService, ServiceManager, TriggerService } from '@src/service'
 import { Candle } from '@src/types'
 
 describe('BacktestClient', () => {
 	let backtestClient: BacktestClient
 	let entityManager: EntityManager
 	let broker: Broker
-	let timeline: Timeline
-	let accountService: AccountService
-	let positionService: PositionService
-	let triggerService: TriggerService
 
 	let priceHistoryDay: PriceHistoryCreateParams
 	let priceHistoryHour4: PriceHistoryCreateParams
@@ -45,11 +41,7 @@ describe('BacktestClient', () => {
 
 	beforeEach(() => {
 		entityManager = new EntityManager()
-		timeline = new Timeline()
-		positionService = new PositionService({ entityManager })
-		accountService = new AccountService({ entityManager, positionService })
-		triggerService = new TriggerService({ entityManager, accountService })
-		broker = new Broker({ entityManager, timeline, accountService, positionService, triggerService })
+		broker = new Broker({ entityManager })
 		backtestClient = new BacktestClient({ entityManager, broker })
 
 		priceHistoryDay = {
