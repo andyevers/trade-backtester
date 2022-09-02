@@ -1,3 +1,4 @@
+import { CandleBySymbol } from '@src/types'
 import {
 	Account,
 	EntityManager,
@@ -204,9 +205,9 @@ export default class Broker {
 		return account
 	}
 
-	public next(): boolean {
+	public next(): CandleBySymbol | null {
 		const hasMoreCandles = this.timeline.next()
-		if (!hasMoreCandles) return false
-		return true
+		if (!hasMoreCandles) return null
+		return this.timeline.getLatestCandlesBuilt()
 	}
 }

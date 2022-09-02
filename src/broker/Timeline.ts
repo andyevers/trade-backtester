@@ -1,5 +1,5 @@
 import { PriceHistoryCreateParams, SymbolTimeframeKey, TimeframeType } from '../repository'
-import { Candle } from '../types'
+import { Candle, CandleBySymbol } from '../types'
 
 interface CandlesBySymbolTimeframe {
 	[key: SymbolTimeframeKey]: Candle[]
@@ -115,6 +115,10 @@ export default class Timeline {
 	 */
 	public getLatestCandleBuilt(symbol: string): Candle | null {
 		return this.latestCandlesBuilt[symbol] || null
+	}
+
+	public getLatestCandlesBuilt(): CandleBySymbol {
+		return this.latestCandlesBuilt
 	}
 
 	/**

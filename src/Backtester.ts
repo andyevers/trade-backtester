@@ -16,6 +16,7 @@ interface BacktesterDeps {
 	BacktestClientClass: typeof BacktestClient
 }
 
+// TODO: Add strategy results
 interface StrategyResults {}
 
 export default class Backtester {
@@ -29,24 +30,36 @@ export default class Backtester {
 			BacktestClientClass = BacktestClient
 		} = _deps || {}
 
-		const { priceHistory, startingCash, priceHistoryAdditional = [] } = args
+		const { priceHistory, startingCash, priceHistoryAdditional = [], startTime } = args
 
 		const entityManager = new EntityManagerClass()
 		const account = entityManager.getRepository('account').create({ startingCash })
 
 		this.broker = new BrokerClass({ entityManager })
-		this.client = new BacktestClientClass({ entityManager, broker: this.broker, accountId: account.id })
+		this.client = new BacktestClientClass({
+			entityManager,
+			broker: this.broker,
+			accountId: account.id
+		})
 
 		this.broker.init({
 			accountIds: [account.id],
 			priceHistory,
-			startTime: priceHistory.candles[0].time,
+			startTime,
 			priceHistoryAdditional
 		})
 	}
 
 	public runTest(strategy: Strategy): StrategyResults {
 		strategy.init(this.client)
+		let candlesBySymbol = this.broker.next()
+
+		while (candlesBySymbol) {
+			strategy.next(candlesBySymbol)
+			candlesBySymbol = this.broker.next()
+		}
+
+		this.broker.getTimeline().reset()
 
 		return {}
 	}
