@@ -112,7 +112,7 @@ export default class PositionRepository extends Repository<Position<PositionStat
 
 	constructor(args: RepositoryArgs) {
 		const { eventBus } = args
-		super({ eventBus, eventPrefix: 'position' })
+		super({ eventBus, eventPrefix: 'positionRepository' })
 	}
 
 	private ensureSymbolBlocks(accountId: number, symbol: string): void {

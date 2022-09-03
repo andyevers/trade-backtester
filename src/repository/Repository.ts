@@ -1,29 +1,68 @@
-import { RepositoriesByName } from './EntityManager'
-import EventBus, { EventBusEvents, EventBusNamespaces } from './EventBus'
+import { EventBus } from '../events'
+import { Account } from './AccountRepository'
+import { Position } from './PositionRepository'
+import { PriceHistory } from './PriceHistoryRepository'
+import { Trigger } from './TriggerRepository'
 
 export interface Entity {
 	id: number
 }
 
 export interface RepositoryAbstractArgs {
-	eventBus: EventBus
-	eventPrefix: keyof EventBusNamespaces
+	eventBus: EventBus<RepositoryEvents>
+	eventPrefix: keyof RepositoryEventNamespaces
 }
 
 export interface RepositoryArgs {
-	eventBus: EventBus
+	eventBus: EventBus<RepositoryEvents>
+}
+
+type RepositoryEventNamespaces = {
+	priceHistoryRepository: RepositoryEvent<PriceHistory>
+	accountRepository: RepositoryEvent<Account>
+	positionRepository: RepositoryEvent<Position>
+	triggerRepository: RepositoryEvent<Trigger>
+}
+
+type RepositoryEvent<T extends Entity> = {
+	create: {
+		entity: T
+	}
+	update: {
+		entity: T
+	}
+	remove: {
+		entity: T
+	}
+	import: {
+		entity: T
+	}
+}
+
+type RepositoryEventType = {
+	[K in keyof RepositoryEventNamespaces]: RepositoryEventNamespaces[K] extends Object
+		? `${Extract<K, string>}.${Extract<keyof RepositoryEventNamespaces[K], string>}`
+		: never
+}[keyof RepositoryEventNamespaces]
+
+export type RepositoryEvents = {
+	[K in RepositoryEventType]: K extends `${infer P}.${infer S}`
+		? P extends keyof RepositoryEventNamespaces
+			? RepositoryEventNamespaces[P][Extract<keyof RepositoryEventNamespaces[P], S>]
+			: never
+		: never
 }
 
 export default abstract class Repository<T extends Entity> {
 	protected readonly entities: Set<T> = new Set()
 	protected readonly entitiesById: { [id: number]: T } = {}
 
-	private readonly eventBus: EventBus
+	private readonly eventBus: EventBus<RepositoryEvents>
 
-	private readonly eTypeUpdate: keyof EventBusEvents
-	private readonly eTypeCreate: keyof EventBusEvents
-	private readonly eTypeRemove: keyof EventBusEvents
-	private readonly eTypeImport: keyof EventBusEvents
+	private readonly eTypeUpdate: keyof RepositoryEvents
+	private readonly eTypeCreate: keyof RepositoryEvents
+	private readonly eTypeRemove: keyof RepositoryEvents
+	private readonly eTypeImport: keyof RepositoryEvents
 
 	constructor(args: RepositoryAbstractArgs) {
 		const { eventBus, eventPrefix } = args

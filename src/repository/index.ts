@@ -4,7 +4,7 @@ import PositionRepository from './PositionRepository'
 import PriceHistoryRepository from './PriceHistoryRepository'
 import TriggerRepository from './TriggerRepository'
 import EntityManager from './EntityManager'
-import EventBus from './EventBus'
+import EventBus from '../events/EventBus'
 
 export * from './Repository'
 export * from './AccountRepository'
@@ -12,7 +12,7 @@ export * from './PositionRepository'
 export * from './PriceHistoryRepository'
 export * from './TriggerRepository'
 export * from './EntityManager'
-export * from './EventBus'
+export * from '../events/EventBus'
 
 export {
 	AccountRepository,

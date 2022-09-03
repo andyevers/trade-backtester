@@ -14,7 +14,7 @@ export interface AccountCreateParams extends Omit<Partial<Account>, 'id'> {
 export default class AccountRepository extends Repository<Account> {
 	constructor(args: RepositoryArgs) {
 		const { eventBus } = args
-		super({ eventBus, eventPrefix: 'account' })
+		super({ eventBus, eventPrefix: 'accountRepository' })
 	}
 	public override create(params: AccountCreateParams): Account {
 		const {

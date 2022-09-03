@@ -6,7 +6,7 @@ import BaseClient, {
 	FetchPositionsParams,
 	PlaceOrderParams
 } from './BaseClient'
-import EventBus from './EventBus'
+import { EventBus } from '../events'
 
 export interface BacktestClientArgs extends BaseClientArgs {
 	broker: Broker

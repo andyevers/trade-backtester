@@ -1,11 +1,12 @@
 import AccountRepository from './AccountRepository'
-import EventBus from './EventBus'
+import EventBus from '../events/EventBus'
 import PositionRepository from './PositionRepository'
 import PriceHistoryRepository from './PriceHistoryRepository'
 import TriggerRepository from './TriggerRepository'
+import { RepositoryEvents } from './Repository'
 
 export interface EntityManagerArgs {
-	eventBus?: EventBus
+	eventBus?: EventBus<RepositoryEvents>
 	repositories?: RepositoriesByName
 }
 
@@ -17,6 +18,7 @@ export type RepositoriesByName = {
 }
 
 export default class EntityManager {
+	private readonly eventBus: EventBus<RepositoryEvents>
 	private readonly repositories: {
 		[K in keyof RepositoriesByName]: RepositoriesByName[K]
 	}
@@ -32,9 +34,14 @@ export default class EntityManager {
 			}
 		} = args
 		this.repositories = repositories
+		this.eventBus = eventBus
 	}
 
 	public getRepository<T extends keyof RepositoriesByName>(repositoryName: T): RepositoriesByName[T] {
 		return this.repositories[repositoryName]
+	}
+
+	public getEventBus(): EventBus<RepositoryEvents> {
+		return this.eventBus
 	}
 }

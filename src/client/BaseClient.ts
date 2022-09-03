@@ -13,11 +13,11 @@ import {
 	RepositoriesByName
 } from '../repository'
 import { Candle } from '../types'
-import EventBus from './EventBus'
+import { EventBus } from '../events'
 
 export interface BaseClientArgs {
 	entityManager?: EntityManager
-	eventBus?: EventBus
+	eventBus?: EventBus<ClientEvents>
 	accountId?: number
 }
 
@@ -67,12 +67,20 @@ export interface CloseOrdersParams {
 	status?: 'OPEN' | 'PENDING' | 'OPEN_PENDING'
 }
 
+export type ClientEvents = {
+	responsePlaceOrder: ResponsePlaceOrder
+	responseCloseOrder: ResponseCloseOrders
+	responseFetchPriceHistory: ResponseFetchPriceHistory
+	responseFetchAccount: ResponseFetchAccount
+	responseFetchPositions: ResponseFetchPositions
+}
+
 // TODO: Add EventBus to capture response from async methods.
 
 export default abstract class BaseClient {
 	protected accountId: number
 	protected readonly entityManager: EntityManager
-	protected readonly eventBus: EventBus
+	protected readonly eventBus: EventBus<ClientEvents>
 
 	constructor(args: BaseClientArgs) {
 		const { entityManager = new EntityManager(), eventBus = new EventBus(), accountId = 1 } = args
@@ -143,6 +151,10 @@ export default abstract class BaseClient {
 		const { symbol, timeframe, candles } = priceHistory
 		const priceHistoryRepository = this.entityManager.getRepository('priceHistory')
 		priceHistoryRepository.addCandles({ symbol, timeframe, candles })
+	}
+
+	public getEventBus(): EventBus<ClientEvents> {
+		return this.eventBus
 	}
 
 	/**

@@ -117,7 +117,7 @@ export default class TriggerRepository extends Repository<Trigger> {
 
 	constructor(args: RepositoryArgs) {
 		const { eventBus } = args
-		super({ eventBus, eventPrefix: 'trigger' })
+		super({ eventBus, eventPrefix: 'triggerRepository' })
 	}
 
 	/**

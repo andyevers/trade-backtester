@@ -56,7 +56,7 @@ export interface GetCandlesParams {
 export default class PriceHistoryRepository extends Repository<PriceHistory> {
 	constructor(args: RepositoryArgs) {
 		const { eventBus } = args
-		super({ eventBus, eventPrefix: 'priceHistory' })
+		super({ eventBus, eventPrefix: 'priceHistoryRepository' })
 	}
 
 	private readonly symbolTimeframes: {
