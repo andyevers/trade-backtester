@@ -1,6 +1,6 @@
 import Broker from '@src/backtest/Broker'
 import Timeline from '@src/backtest/Timeline'
-import Backtester from '@src/Backtester'
+import Backtester from '@src/backtest/Backtester'
 import { BaseClient } from '@src/client'
 import BacktestClient from '@src/client/BacktestClient'
 import { Account } from '@src/repository'
@@ -136,6 +136,11 @@ describe('Performance', () => {
 		 * iterations: 100,000
 		 * time:       40ms
 		 * notes:      after changing to ServiceManager.getService() instead of this.accountService
+		 *
+		 * Results 2022-09-03
+		 * iterations: 100,000
+		 * time:       46ms
+		 * notes:      Misc changes
 		 */
 		logResult({ name: 'Timeline.setTime', iterations: i, time })
 	})

@@ -1,4 +1,4 @@
-import Repository, { Entity } from './Repository'
+import Repository, { Entity, RepositoryArgs } from './Repository'
 
 type NumberWhen<A extends PositionStatus, B extends PositionStatus> = A extends B ? number : null
 
@@ -109,6 +109,11 @@ export default class PositionRepository extends Repository<Position<PositionStat
 	private readonly accountPositionsByIdMap: {
 		[accountId: number]: PositionsByIdMap
 	} = {}
+
+	constructor(args: RepositoryArgs) {
+		const { eventBus } = args
+		super({ eventBus, eventPrefix: 'position' })
+	}
 
 	private ensureSymbolBlocks(accountId: number, symbol: string): void {
 		const accountPositionsMap = this.getPositionsByIdMap(accountId, true)

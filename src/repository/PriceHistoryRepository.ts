@@ -1,5 +1,5 @@
 import { Candle } from '../types'
-import Repository, { Entity } from './Repository'
+import Repository, { Entity, RepositoryArgs } from './Repository'
 
 export type TimeframeType =
 	| 'minute'
@@ -54,6 +54,11 @@ export interface GetCandlesParams {
 }
 
 export default class PriceHistoryRepository extends Repository<PriceHistory> {
+	constructor(args: RepositoryArgs) {
+		const { eventBus } = args
+		super({ eventBus, eventPrefix: 'priceHistory' })
+	}
+
 	private readonly symbolTimeframes: {
 		[key: SymbolTimeframeKey]: PriceHistory
 	} = {}
@@ -163,8 +168,10 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 			for (let i = 0; i < candles.length; i++) {
 				priceHistory.candles.push(candles[i])
 			}
+			this.update(priceHistory.id, {})
 		} else {
-			this.create(params)
+			this.create({ ...params, candles: [] })
+			this.addCandles(params)
 		}
 	}
 
@@ -177,8 +184,10 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		const priceHistory = this.symbolTimeframes[key]
 		if (priceHistory) {
 			priceHistory.candles.push(candle)
+			this.update(priceHistory.id, {})
 		} else {
-			this.create({ symbol, timeframe, candles: [candle] })
+			this.create({ symbol, timeframe, candles: [] })
+			this.addCandle(params)
 		}
 	}
 

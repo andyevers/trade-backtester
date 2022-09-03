@@ -1,10 +1,39 @@
+import { RepositoriesByName } from './EntityManager'
+import EventBus, { EventBusEvents, EventBusNamespaces } from './EventBus'
+
 export interface Entity {
 	id: number
+}
+
+export interface RepositoryAbstractArgs {
+	eventBus: EventBus
+	eventPrefix: keyof EventBusNamespaces
+}
+
+export interface RepositoryArgs {
+	eventBus: EventBus
 }
 
 export default abstract class Repository<T extends Entity> {
 	protected readonly entities: Set<T> = new Set()
 	protected readonly entitiesById: { [id: number]: T } = {}
+
+	private readonly eventBus: EventBus
+
+	private readonly eTypeUpdate: keyof EventBusEvents
+	private readonly eTypeCreate: keyof EventBusEvents
+	private readonly eTypeRemove: keyof EventBusEvents
+	private readonly eTypeImport: keyof EventBusEvents
+
+	constructor(args: RepositoryAbstractArgs) {
+		const { eventBus, eventPrefix } = args
+		this.eventBus = eventBus
+
+		this.eTypeUpdate = `${eventPrefix}.update`
+		this.eTypeCreate = `${eventPrefix}.create`
+		this.eTypeRemove = `${eventPrefix}.remove`
+		this.eTypeImport = `${eventPrefix}.import`
+	}
 
 	private index = 0
 
@@ -30,6 +59,7 @@ export default abstract class Repository<T extends Entity> {
 		;(entity as T).id = id
 		this.entities.add(entity as T)
 		this.entitiesById[id] = entity as T
+		this.eventBus.dispatch(this.eTypeCreate, { entity: entity as any })
 		return entity as T
 	}
 
@@ -42,12 +72,16 @@ export default abstract class Repository<T extends Entity> {
 		const id = entity.id + 1
 		this.entities.add(entity as T)
 		this.entitiesById[id] = entity as T
+		this.eventBus.dispatch(this.eTypeImport, { entity: entity as any })
 		return entity
 	}
 
 	public remove(id: number): void {
-		this.entities.delete(this.entitiesById[id])
+		const entity = this.entitiesById[id]
+		if (!entity) return
+		this.entities.delete(entity)
 		delete this.entitiesById[id]
+		this.eventBus.dispatch(this.eTypeRemove, { entity: entity as any })
 	}
 
 	public update(id: number, params: Omit<Partial<T> | T, 'id'>): T | null {
@@ -57,6 +91,8 @@ export default abstract class Repository<T extends Entity> {
 			if (key === 'id') continue
 			entity[key as keyof T] = params[key as keyof typeof params] as any
 		}
+
+		this.eventBus.dispatch(this.eTypeUpdate, { entity: entity as any })
 		return entity
 	}
 }

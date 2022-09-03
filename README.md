@@ -39,12 +39,13 @@ Speed is a top priority. Code can execute hundreds of thousands of times syncron
 
 ### Changes
 
--   [ ] The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
 -   [x] `TriggerService.processCandle` is SUPER slow. fix this.
+-   [ ] The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
 -   [ ] Creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.
+-   [ ] inactive triggers are currently not in use. Delete deactivate triggers and related methods in `TriggerRepository`
 
 ### Additions
 
--   [ ] Add `BacktestResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
 -   [x] In `Backtester.ts`, add function to run a strategy (fires init and next).
+-   [ ] Add `StrategyResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
 -   [ ] In `Timeline.ts`, make reset() change things back to original state after settings start time. Keep in mind this may run hundreds or thousands of times syncronously while testing multiple strategies.

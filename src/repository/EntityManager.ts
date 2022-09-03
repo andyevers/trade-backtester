@@ -1,10 +1,12 @@
 import AccountRepository from './AccountRepository'
+import EventBus from './EventBus'
 import PositionRepository from './PositionRepository'
 import PriceHistoryRepository from './PriceHistoryRepository'
 import TriggerRepository from './TriggerRepository'
 
 export interface EntityManagerArgs {
-	repositories: RepositoriesByName
+	eventBus?: EventBus
+	repositories?: RepositoriesByName
 }
 
 export type RepositoriesByName = {
@@ -19,15 +21,16 @@ export default class EntityManager {
 		[K in keyof RepositoriesByName]: RepositoriesByName[K]
 	}
 
-	constructor(args?: EntityManagerArgs) {
+	constructor(args: EntityManagerArgs = {}) {
 		const {
+			eventBus = new EventBus(),
 			repositories = {
-				account: new AccountRepository(),
-				position: new PositionRepository(),
-				trigger: new TriggerRepository(),
-				priceHistory: new PriceHistoryRepository()
+				account: new AccountRepository({ eventBus }),
+				position: new PositionRepository({ eventBus }),
+				trigger: new TriggerRepository({ eventBus }),
+				priceHistory: new PriceHistoryRepository({ eventBus })
 			}
-		} = args || {}
+		} = args
 		this.repositories = repositories
 	}
 

@@ -1,6 +1,6 @@
 import { PositionTriggerLabel } from '../service'
 import { Candle } from '../types'
-import Repository, { Entity } from './Repository'
+import Repository, { Entity, RepositoryArgs } from './Repository'
 
 export type TriggerType = 'crossAbove' | 'crossBelow' | 'touchFromAbove' | 'touchFromBelow' | 'immediate'
 export type TriggerCategory = keyof TriggerCategoryLabel
@@ -114,6 +114,11 @@ export default class TriggerRepository extends Repository<Trigger> {
 	private readonly triggerLine: (Set<Trigger> | undefined)[] = []
 
 	private readonly triggerLineIncrement = 0.5
+
+	constructor(args: RepositoryArgs) {
+		const { eventBus } = args
+		super({ eventBus, eventPrefix: 'trigger' })
+	}
 
 	/**
 	 * This is a lineup of triggers that are currently active.

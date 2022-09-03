@@ -1,3 +1,4 @@
+import { EventBus } from '@src/repository'
 import PositionRepository, {
 	PositionsByIdLookupFilters,
 	PositionStatus,
@@ -6,7 +7,8 @@ import PositionRepository, {
 
 describe('PositionRepository', () => {
 	test('getByIdLookup', () => {
-		const positionRepository = new PositionRepository()
+		const eventBus = new EventBus()
+		const positionRepository = new PositionRepository({ eventBus })
 		const createPosition = (symbol: string, type: PositionType, status: PositionStatus) => {
 			return positionRepository.create({
 				accountId: 1,
