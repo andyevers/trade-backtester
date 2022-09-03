@@ -2,9 +2,31 @@
 
 Create trading strategies and run backtests.
 
--   **DO NOT MODIFY RETURNED OBJECTS** such as accounts, candles, positions, etc... this will alter the object stored in the broker. This is because returning references to already created objects is much faster than cloning every object.
+## Development & Strategy Creation Rules
 
-## Additional Timeframes
+Speed is a top priority. Code can execute hundreds of thousands of times syncronously while testing hundreds of strategies, so every ms counts. Record performance checks after adding to code. generally, do 100,000 executions `performance.test.ts`
+
+### Function Usage
+
+-   Avoid `Array` functions that require reindexing (slice, shift, etc...) pretty much just allow pop()
+-   Avoid `Math` functions, just manually do calculations
+-   Avoid spread operator ({ ...variable })
+
+### Loops
+
+-   Never loop over all candles
+-   If searching for an item, consider using binary search (see `PriceHistoryRepository.getIndexNearTime`)
+-   Implement checks to skip unnecessary loops (see `TriggerRepository.getTriggerLine`)
+-   If filtering items, consider indexing them to avoid iterating over all items (see `PositionRepository.getByIdLookup`)
+
+### Misc
+
+-   Avoid creating huge indexes... I tried indexing candles by time and it slowed things down a lot. binary search ended up being a lot faster.
+-   **Do not modify returned objects** such as accounts, candles, positions, etc... this will alter the object stored in the repositories. This is because returning references to already created objects is much faster than cloning every object.
+
+## Notes
+
+### Additional Timeframes In Backtests
 
 -   Placing trades on additional timeframes will not be completely accurate. Unless the candle times are the same as the main candles, market orders will be placed on the next candle, or potentially expire if using orderDuration: DAY
 -   StopLosses will always fire before takeProfit if both are hit in the same candle, providing sub-timeframes for the symbol will not change this.
@@ -13,26 +35,16 @@ Create trading strategies and run backtests.
 -   Triggers are activated while each new candle is being iterated, so when one trigger is activated (like a stopLoss or takeProfit), be aware that other candle data may not be updated yet.
 -   Each trigger is only tested once per symbol. if you have AAPL 'day' and AAPL 'minute', triggers on symbol AAPL will be tested only using the main timeframe if present, or the first combined candle for AAPL
 
-## TODO
+## Todo
 
 ### Changes
 
--   Maybe: Make Broker.ts unaware of EntityManager used by BacktestClient. It should send the data to BacktestClient where it then gets stored in the EntityManager repos. This way it will function the same as live clients, where entity manager is used for caching local data and the broker acts as a live broker.
-
--   The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
--   `TriggerService.processCandle` is SUPER slow. fix this.
--   Maybe: We can shave of a few ms by setting repositories and services in the contructor rather than using getService and getRepository every time. possibly update this?
-
--   Cleanup TriggerRepository after adding indexIncrement and
+-   [ ] The term "Order" and "Position" are being used for the same thing (closeOrder returns Position etc...). Change to make terms uniform.
+-   [x] `TriggerService.processCandle` is SUPER slow. fix this.
+-   [ ] Creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.
 
 ### Additions
 
--   Add `BacktestResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
-
--   In `Backtester.ts`, add function to run a strategy (fires init and next).
-
--   In `Backtester.ts`, add function to analyze strategy results. (consider adding a Results)
-
-### Performance Improvements
-
--   Creating a candle copy in Timeline.candleGenerator takes about 10ms - 15ms for 70,000 iterations. This is only used to deal with current prices on alternate timeframes. find a faster way of doing this.
+-   [ ] Add `BacktestResultsAnalyzer.ts`. See https://kernc.github.io/backtesting.py/ for example output.
+-   [x] In `Backtester.ts`, add function to run a strategy (fires init and next).
+-   [ ] In `Timeline.ts`, make reset() change things back to original state after settings start time. Keep in mind this may run hundreds or thousands of times syncronously while testing multiple strategies.

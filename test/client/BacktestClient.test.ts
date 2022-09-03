@@ -102,6 +102,8 @@ describe('BacktestClient', () => {
 			priceHistoryAdditional: [priceHistoryHour4, priceHistoryHour4GM],
 			startTime: MS_TIME_START_AAPL
 		})
+
+		backtestClient.setAccountId(accountA.id)
 	})
 
 	test('getCandles', () => {

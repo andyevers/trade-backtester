@@ -70,7 +70,7 @@ export interface CloseOrdersParams {
 // TODO: Add EventBus to capture response from async methods.
 
 export default abstract class BaseClient {
-	protected readonly accountId: number
+	protected accountId: number
 	protected readonly entityManager: EntityManager
 	protected readonly eventBus: EventBus
 
@@ -239,5 +239,9 @@ export default abstract class BaseClient {
 		const priceHistory = priceHistoryRepository.getBySymbolTimeframe(symbol, timeframe)
 		if (!priceHistory) return
 		priceHistoryRepository.addCandle({ symbol, timeframe, candle })
+	}
+
+	public setAccountId(accountId: number): void {
+		this.accountId = accountId
 	}
 }

@@ -8,12 +8,11 @@ interface BacktesterArgs {
 	startTime: number
 	priceHistory: PriceHistoryCreateParams
 	priceHistoryAdditional?: PriceHistoryCreateParams[]
-}
-
-interface BacktesterDeps {
-	EntityManagerClass: typeof EntityManager
-	BrokerClass: typeof Broker
-	BacktestClientClass: typeof BacktestClient
+	_deps?: {
+		entityManager?: EntityManager
+		broker?: Broker
+		backtestClient?: BacktestClient
+	}
 }
 
 // TODO: Add strategy results
@@ -24,27 +23,23 @@ export default class Backtester {
 	private readonly client: BacktestClient
 	private readonly entityManager: EntityManager
 
-	constructor(args: BacktesterArgs, _deps?: BacktesterDeps) {
+	constructor(args: BacktesterArgs) {
+		const { priceHistory, startingCash, startTime, priceHistoryAdditional = [], _deps = {} } = args
 		const {
-			BrokerClass = Broker,
-			EntityManagerClass = EntityManager,
-			BacktestClientClass = BacktestClient
-		} = _deps || {}
+			entityManager = new EntityManager(),
+			broker = new Broker({ entityManager }),
+			backtestClient = new BacktestClient({
+				broker,
+				accountId: entityManager.getRepository('account').create({ startingCash }).id
+			})
+		} = _deps
 
-		const { priceHistory, startingCash, priceHistoryAdditional = [], startTime } = args
-
-		this.entityManager = new EntityManagerClass()
-		const account = this.entityManager.getRepository('account').create({ startingCash })
-
-		this.broker = new BrokerClass({ entityManager: this.entityManager })
-		this.client = new BacktestClientClass({
-			entityManager: this.entityManager,
-			broker: this.broker,
-			accountId: account.id
-		})
+		this.broker = broker
+		this.client = backtestClient
+		this.entityManager = entityManager
 
 		this.broker.init({
-			accountIds: [account.id],
+			accountIds: [backtestClient.getAccount().id],
 			priceHistory,
 			startTime,
 			priceHistoryAdditional
@@ -66,7 +61,6 @@ export default class Backtester {
 			candlesBySymbol = this.broker.next()
 			if (i >= maxIterations) {
 				throw new Error(`Max iterations reached: ${maxIterations.toLocaleString('en-US')}`)
-				// break
 			}
 			i++
 		}
