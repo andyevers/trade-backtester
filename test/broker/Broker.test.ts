@@ -1,5 +1,5 @@
-import Broker from '@src/broker/Broker'
-import Timeline from '@src/broker/Timeline'
+import Broker from '@src/backtest/Broker'
+import Timeline from '@src/backtest/Timeline'
 import { Account } from '@src/repository/AccountRepository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'

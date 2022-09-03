@@ -1,4 +1,4 @@
-import { Broker } from '@src/broker'
+import { Broker } from '@src/backtest'
 import BacktestClient from '@src/client/BacktestClient'
 import { Account, PriceHistoryCreateParams } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
@@ -97,7 +97,6 @@ describe('BacktestClient', () => {
 		accountB = accountRepository.create({ startingCash: 10000 })
 
 		broker.init({
-			accountIds: [accountA.id, accountB.id],
 			priceHistory: priceHistoryDay,
 			priceHistoryAdditional: [priceHistoryHour4, priceHistoryHour4GM],
 			startTime: MS_TIME_START_AAPL

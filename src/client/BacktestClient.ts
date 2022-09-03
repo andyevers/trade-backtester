@@ -1,4 +1,4 @@
-import { Broker } from '@src/broker'
+import { Broker } from '@src/backtest'
 import { GetCandlesParams } from '@src/repository'
 import BaseClient, {
 	BaseClientArgs,

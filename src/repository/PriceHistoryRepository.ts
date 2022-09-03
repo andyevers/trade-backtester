@@ -103,14 +103,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		const { symbol, timeframe, time } = params
 		const key = this.getKey(symbol, timeframe)
 
-		// try getting keyed result first.
-		// const symbolTimeframeTimes = this.indexByTimeByStfKey[key] || {}
-		// const keyedResult = symbolTimeframeTimes[time]
-		// if (keyedResult) {
-		// 	return keyedResult
-		// }
-
-		// if no results, iterate candles and find closest.
 		const candles = this.symbolTimeframes[key]?.candles
 		if (!candles) return null
 		if (time < candles[0].time) return 0
@@ -185,7 +177,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		const priceHistory = this.symbolTimeframes[key]
 		if (priceHistory) {
 			priceHistory.candles.push(candle)
-			// this.indexByTimeByStfKey[key][candle.time] = priceHistory.candles.length - 1
 		} else {
 			this.create({ symbol, timeframe, candles: [candle] })
 		}
@@ -196,7 +187,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		if (!priceHistory) return
 		const key = this.getKey(priceHistory.symbol, priceHistory.timeframe)
 		delete this.symbolTimeframes[key]
-		// delete this.indexByTimeByStfKey[key]
 		super.remove(priceHistoryId)
 	}
 
@@ -208,10 +198,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 			throw new Error(`PriceHistory already exists for ${symbol} ${timeframe}`)
 		}
 		this.symbolTimeframes[key] = priceHistory
-		// this.indexByTimeByStfKey[key] = {}
-		// for (let i = 0; i < priceHistory.candles.length; i++) {
-		// 	this.indexByTimeByStfKey[key][priceHistory.candles[i].time] = i
-		// }
 		return priceHistory
 	}
 }

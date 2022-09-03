@@ -1,4 +1,4 @@
-import Timeline from '@src/broker/Timeline'
+import Timeline from '@src/backtest/Timeline'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import { Candle } from '@src/types'

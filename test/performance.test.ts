@@ -1,15 +1,14 @@
+import Broker from '@src/backtest/Broker'
+import Timeline from '@src/backtest/Timeline'
 import Backtester from '@src/Backtester'
-import Broker from '@src/broker/Broker'
-import Timeline from '@src/broker/Timeline'
 import { BaseClient } from '@src/client'
 import BacktestClient from '@src/client/BacktestClient'
-import { Account, Position, TriggerRepository } from '@src/repository'
+import { Account } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import { ServiceManager } from '@src/service'
 import { Strategy } from '@src/strategy/DemoStrategy'
 import { Candle, CandleBySymbol } from '@src/types'
-import DemoStrategy from '../unused/DemoStrategy'
 
 describe('Performance', () => {
 	let backtestClient: BacktestClient
@@ -111,7 +110,6 @@ describe('Performance', () => {
 
 	test('Performance Timeline.setTime', () => {
 		broker.init({
-			accountIds: [accountA.id],
 			priceHistory: priceHistoryDay,
 			startTime: MS_TIME_START_AAPL
 		})

@@ -1,4 +1,4 @@
-import { Broker } from './broker'
+import { Broker } from './backtest'
 import { BacktestClient } from './client'
 import { EntityManager, PriceHistoryCreateParams } from './repository'
 import { Strategy } from './strategy/DemoStrategy'
@@ -39,7 +39,6 @@ export default class Backtester {
 		this.entityManager = entityManager
 
 		this.broker.init({
-			accountIds: [backtestClient.getAccount().id],
 			priceHistory,
 			startTime,
 			priceHistoryAdditional

@@ -18,9 +18,6 @@ export interface BrokerArgs {
 	entityManager: EntityManager
 	serviceManager?: ServiceManager
 	timeline?: Timeline
-	// positionService: PositionService
-	// accountService: AccountService
-	// triggerService: TriggerService
 }
 
 export interface GetCandlesParams {
@@ -56,7 +53,6 @@ export interface Quote {
 export interface BrokerInitParams {
 	priceHistory: PriceHistoryCreateParams
 	priceHistoryAdditional?: PriceHistoryCreateParams[]
-	accountIds: number[]
 	startTime: number
 }
 
@@ -92,18 +88,10 @@ export default class Broker {
 	}
 
 	public init(params: BrokerInitParams): void {
-		const { priceHistory, priceHistoryAdditional = [], accountIds, startTime } = params
+		const { priceHistory, priceHistoryAdditional = [], startTime } = params
 
 		if (startTime < priceHistory.candles[0].time) {
 			throw new Error('Start time cannot be before the first candle time in price history')
-		}
-
-		const accountRepository = this.entityManager.getRepository('account')
-
-		const accounts: Account[] = []
-		for (const accountId of accountIds) {
-			const account = accountRepository.get(accountId)
-			if (account) accounts.push(account)
 		}
 
 		this.timeline.setPriceHistory([priceHistory, ...priceHistoryAdditional])
