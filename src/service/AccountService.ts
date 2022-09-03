@@ -151,14 +151,6 @@ export default class AccountService {
 		return position
 	}
 
-	private createPendingOrder(
-		params: Omit<Required<PlaceOrderAccountParams>, 'latestCandle'>
-	): Position<'PENDING'> {
-		const positionRepository = this.entityManager.getRepository('position')
-		const position = positionRepository.create({ ...params, status: 'PENDING' })
-		return position
-	}
-
 	public placeOrder(params: PlaceOrderAccountParams): Position {
 		const {
 			accountId,
@@ -185,18 +177,19 @@ export default class AccountService {
 			throw new Error('orderPrice must be provided when placing non-market orders')
 		}
 
-		const position = this.createPendingOrder({
+		const position = this.entityManager.getRepository('position').create({
 			accountId,
 			orderQty,
-			orderTime,
 			symbol,
 			type,
+			orderTime,
 			orderDuration,
-			orderPrice,
 			orderType,
+			orderPrice,
 			stopLoss,
 			takeProfit,
-			trailingStop
+			trailingStop,
+			status: 'PENDING'
 		})
 
 		if (orderType === 'MARKET' && latestCandle && !isMismatchTime) {

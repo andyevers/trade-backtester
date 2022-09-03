@@ -19,6 +19,8 @@ export default class TriggerService {
 		this.accountService = accountService
 	}
 
+	private lastTriggerIndexBySymbol: { [symbol: string]: number } = {}
+
 	/**
 	 * Currently only processes position triggers. Must update if other trigger types are added.
 	 */
@@ -27,23 +29,28 @@ export default class TriggerService {
 		const positionRepository = this.entityManager.getRepository('position')
 		const positionsTriggers = triggerRepository.getByLabelByPositionId({ symbol, isActive: true })
 
-		const process = (trigger: Trigger, position: Position) => {
+		const lastTriggerIndex = this.lastTriggerIndexBySymbol[symbol] || null
+		const targetTriggerIndex = triggerRepository.getTriggerLineIndex(candle.close)
+		const triggerLine = triggerRepository.getTriggerLine()
+
+		if (lastTriggerIndex === targetTriggerIndex) return
+
+		const processTrigger = (trigger: Trigger, position: Position) => {
 			if (position.status === 'CLOSED' || position.status === 'CANCELED') return
 			this.processTrigger(trigger as Trigger<'position'>, candle, onTrigger)
 		}
 
-		// Note: Trigger execution order for positions matters.
-		for (const positionId in positionsTriggers) {
+		const processPositionId = (positionId: number) => {
 			const triggers = positionsTriggers[positionId]
-			const position = positionRepository.get(parseInt(positionId)) as Position
+			const position = positionRepository.get(positionId) as Position
 
 			// try entry
-			if (triggers.entryMarket) process(triggers.entryMarket, position)
-			else if (triggers.entryLimit) process(triggers.entryLimit, position)
-			else if (triggers.entryStop) process(triggers.entryStop, position)
+			if (triggers.entryMarket) processTrigger(triggers.entryMarket, position)
+			else if (triggers.entryLimit) processTrigger(triggers.entryLimit, position)
+			else if (triggers.entryStop) processTrigger(triggers.entryStop, position)
 
 			// try pull trailing stop
-			if (triggers.pullTrailingStop) process(triggers.pullTrailingStop, position)
+			if (triggers.pullTrailingStop) processTrigger(triggers.pullTrailingStop, position)
 
 			// get closer stoploss trigger (stopLoss or trailingStop)
 			let slTrigger = triggers.stopLoss || null
@@ -55,10 +62,30 @@ export default class TriggerService {
 			}
 
 			// try exit. Don't use elseif because it could have all 3 and we want to test each.
-			if (triggers.closeMarket) process(triggers.closeMarket, position)
-			if (slTrigger) process(slTrigger, position)
-			if (triggers.takeProfit) process(triggers.takeProfit, position)
+			if (triggers.closeMarket) processTrigger(triggers.closeMarket, position)
+			if (slTrigger) processTrigger(slTrigger, position)
+			if (triggers.takeProfit) processTrigger(triggers.takeProfit, position)
 		}
+
+		if (!lastTriggerIndex) {
+			for (const positionId in positionsTriggers) {
+				// don't bother with parseInt, just looking up index.
+				processPositionId(positionId as any)
+			}
+		} else {
+			// only check triggers between previous checked price and new price
+			const incrementor = lastTriggerIndex > targetTriggerIndex ? -1 : 1
+			for (let i = lastTriggerIndex; i !== targetTriggerIndex; i += incrementor) {
+				if (!triggerLine[i]) continue
+				const positionIdSet = triggerLine[i] as Set<Trigger>
+				positionIdSet.forEach((trigger) => {
+					// only process triggers with positionIds
+					if (trigger.positionId !== null) processPositionId(trigger.positionId)
+				})
+			}
+		}
+
+		this.lastTriggerIndexBySymbol[symbol] = targetTriggerIndex
 	}
 
 	public processTrigger(trigger: Trigger, candle: Candle, onTrigger?: OnTriggerCallback): void {

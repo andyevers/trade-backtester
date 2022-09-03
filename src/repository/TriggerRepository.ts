@@ -111,6 +111,31 @@ export default class TriggerRepository extends Repository<Trigger> {
 
 	private readonly inactiveTriggersById: TriggersById = {}
 
+	private readonly triggerLine: (Set<Trigger> | undefined)[] = []
+
+	private readonly triggerLineIncrement = 0.5
+
+	/**
+	 * This is a lineup of triggers that are currently active.
+	 * Prevents triggers from being checked when their price is not crossed
+	 *
+	 * ex:
+	 * [undefined, undefined, TriggersA, undefined, undefined, TriggersB, undefined]
+	 * previous price checked was at index 1, current price check
+	 * is at index 4, only triggersA will be checked.
+	 */
+	public getTriggerLine(): (Set<Trigger> | undefined)[] {
+		return this.triggerLine
+	}
+
+	/**
+	 * The price increment until the triggers is placed in the next
+	 * triggerLineArr index.
+	 */
+	public getTriggerLineIndex(price: number): number {
+		return (price - (price % this.triggerLineIncrement)) / this.triggerLineIncrement
+	}
+
 	public deactivateForPosition(positionId: number): void {
 		const triggersByLabel = this.positionTriggersByLabelMap._all.isActive[positionId] || {}
 		for (const label in triggersByLabel) {
@@ -155,8 +180,21 @@ export default class TriggerRepository extends Repository<Trigger> {
 		}
 	}
 
+	public update(id: number, params: Omit<Partial<Trigger>, 'id'>): Trigger | null {
+		const trigger = this.get(id)
+		if (!trigger) return null
+		if (params.price) {
+			this.unsetTriggerBucket(trigger)
+			trigger.price = params.price
+			this.setTriggerBucket(trigger)
+			delete params.price
+		}
+
+		return super.update(id, params)
+	}
+
 	private unsetMapBlocks(trigger: Trigger): void {
-		const { type, id, symbol, positionId, label, isActive } = trigger
+		const { type, id, symbol, positionId, label, isActive, price } = trigger
 		delete this.triggersByIdMap._all._all[id]
 		delete this.triggersByIdMap._all[type][id]
 		delete this.triggersByIdMap._bySymbol[symbol]._all[id]
@@ -169,10 +207,31 @@ export default class TriggerRepository extends Repository<Trigger> {
 			delete this.positionTriggersByLabelMap._bySymbol[symbol]._all[positionId][label]
 			delete this.positionTriggersByLabelMap._bySymbol[symbol][activeKey][positionId][label]
 		}
+
+		this.unsetTriggerBucket(trigger)
+	}
+
+	private setTriggerBucket(trigger: Trigger): void {
+		const { price } = trigger
+		const incrementIndex = this.getTriggerLineIndex(price)
+		if (!this.triggerLine[incrementIndex]) {
+			this.triggerLine[incrementIndex] = new Set()
+		}
+		;(this.triggerLine[incrementIndex] as Set<Trigger>).add(trigger)
+	}
+
+	private unsetTriggerBucket(trigger: Trigger): void {
+		const { price } = trigger
+		const incrementIndex = this.getTriggerLineIndex(price)
+		const triggerBucket = this.triggerLine[incrementIndex]
+		if (triggerBucket) {
+			triggerBucket.delete(trigger)
+			if (triggerBucket.size === 0) delete this.triggerLine[incrementIndex]
+		}
 	}
 
 	private ensureSymbolBlocks(trigger: Trigger): void {
-		const { symbol, positionId, isActive } = trigger
+		const { symbol, positionId, isActive, price } = trigger
 
 		if (!this.triggersByIdMap._bySymbol[symbol]) {
 			this.triggersByIdMap._bySymbol[symbol] = {
@@ -199,6 +258,8 @@ export default class TriggerRepository extends Repository<Trigger> {
 				this.positionTriggersByLabelMap._bySymbol[symbol]._all[positionId] = {}
 				this.positionTriggersByLabelMap._bySymbol[symbol][activeKey][positionId] = {}
 			}
+
+			this.setTriggerBucket(trigger)
 		}
 	}
 

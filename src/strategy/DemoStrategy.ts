@@ -17,7 +17,7 @@ export interface Strategy {
 	next(candleBySymbol: CandleBySymbol): void
 }
 
-class DemoStrategy implements Strategy {
+export default class DemoStrategy implements Strategy {
 	private client!: BaseClient
 
 	init(client: BaseClient): void {
@@ -25,6 +25,16 @@ class DemoStrategy implements Strategy {
 	}
 
 	next(candleBySymbol: CandleBySymbol): void {
-		console.log('next')
+		for (const symbol in candleBySymbol) {
+			const candle = candleBySymbol[symbol]
+			if (candle.close < 4) {
+				this.client.placeOrder({
+					symbol,
+					orderQty: 30,
+					type: 'LONG',
+					takeProfit: 5
+				})
+			}
+		}
 	}
 }

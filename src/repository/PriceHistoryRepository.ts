@@ -200,9 +200,6 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 		super.remove(priceHistoryId)
 	}
 
-	/**
-	 * Warning: this is an expensive operation because it indexes all candles by time.
-	 */
 	public override create(params: PriceHistoryCreateParams): PriceHistory {
 		const priceHistory = super.create(params)
 		const { symbol, timeframe } = priceHistory

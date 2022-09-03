@@ -22,6 +22,7 @@ interface StrategyResults {}
 export default class Backtester {
 	private readonly broker: Broker
 	private readonly client: BacktestClient
+	private readonly entityManager: EntityManager
 
 	constructor(args: BacktesterArgs, _deps?: BacktesterDeps) {
 		const {
@@ -32,12 +33,12 @@ export default class Backtester {
 
 		const { priceHistory, startingCash, priceHistoryAdditional = [], startTime } = args
 
-		const entityManager = new EntityManagerClass()
-		const account = entityManager.getRepository('account').create({ startingCash })
+		this.entityManager = new EntityManagerClass()
+		const account = this.entityManager.getRepository('account').create({ startingCash })
 
-		this.broker = new BrokerClass({ entityManager })
+		this.broker = new BrokerClass({ entityManager: this.entityManager })
 		this.client = new BacktestClientClass({
-			entityManager,
+			entityManager: this.entityManager,
 			broker: this.broker,
 			accountId: account.id
 		})
@@ -50,16 +51,27 @@ export default class Backtester {
 		})
 	}
 
+	public getEntityManager(): EntityManager {
+		return this.entityManager
+	}
+
 	public runTest(strategy: Strategy): StrategyResults {
 		strategy.init(this.client)
 		let candlesBySymbol = this.broker.next()
+		const maxIterations = 1000000 // 1 million
 
+		let i = 0
 		while (candlesBySymbol) {
 			strategy.next(candlesBySymbol)
 			candlesBySymbol = this.broker.next()
+			if (i >= maxIterations) {
+				throw new Error(`Max iterations reached: ${maxIterations.toLocaleString('en-US')}`)
+				// break
+			}
+			i++
 		}
 
-		this.broker.getTimeline().reset()
+		// this.broker.getTimeline().reset()
 
 		return {}
 	}
