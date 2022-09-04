@@ -1,30 +1,30 @@
+import { Candle } from '@src/types'
 import { EventBus } from '../events'
 import { Account } from './AccountRepository'
 import { Position } from './PositionRepository'
 import { PriceHistory } from './PriceHistoryRepository'
 import { Trigger } from './TriggerRepository'
 
-export interface Entity {
-	id: number
-}
-
-export interface RepositoryAbstractArgs {
+interface RepositoryAbstractArgs {
 	eventBus: EventBus<RepositoryEvents>
 	eventPrefix: keyof RepositoryEventNamespaces
 }
 
-export interface RepositoryArgs {
-	eventBus: EventBus<RepositoryEvents>
-}
-
 type RepositoryEventNamespaces = {
-	priceHistoryRepository: RepositoryEvent<PriceHistory>
+	priceHistoryRepository: RepositoryEvent<PriceHistory> & PriceHistoryRepositoryEvents
 	accountRepository: RepositoryEvent<Account>
 	positionRepository: RepositoryEvent<Position>
 	triggerRepository: RepositoryEvent<Trigger>
 }
 
-type RepositoryEvent<T extends Entity> = {
+type PriceHistoryRepositoryEvents = {
+	addCandles: {
+		entity: PriceHistory
+		candles: Candle[]
+	}
+}
+
+export type RepositoryEvent<T extends Entity> = {
 	create: {
 		entity: T
 	}
@@ -53,11 +53,19 @@ export type RepositoryEvents = {
 		: never
 }
 
+export interface Entity {
+	id: number
+}
+
+export interface RepositoryArgs {
+	eventBus: EventBus<RepositoryEvents>
+}
+
 export default abstract class Repository<T extends Entity> {
 	protected readonly entities: Set<T> = new Set()
 	protected readonly entitiesById: { [id: number]: T } = {}
 
-	private readonly eventBus: EventBus<RepositoryEvents>
+	protected readonly eventBus: EventBus<RepositoryEvents>
 
 	private readonly eTypeUpdate: keyof RepositoryEvents
 	private readonly eTypeCreate: keyof RepositoryEvents
@@ -68,10 +76,10 @@ export default abstract class Repository<T extends Entity> {
 		const { eventBus, eventPrefix } = args
 		this.eventBus = eventBus
 
-		this.eTypeUpdate = `${eventPrefix}.update`
-		this.eTypeCreate = `${eventPrefix}.create`
-		this.eTypeRemove = `${eventPrefix}.remove`
-		this.eTypeImport = `${eventPrefix}.import`
+		this.eTypeUpdate = `${eventPrefix}.update` as keyof RepositoryEvents
+		this.eTypeCreate = `${eventPrefix}.create` as keyof RepositoryEvents
+		this.eTypeRemove = `${eventPrefix}.remove` as keyof RepositoryEvents
+		this.eTypeImport = `${eventPrefix}.import` as keyof RepositoryEvents
 	}
 
 	private index = 0
