@@ -20,7 +20,7 @@ type RepositoryEventNamespaces = {
 type PriceHistoryRepositoryEvents = {
 	addCandles: {
 		entity: PriceHistory
-		candles: Candle[]
+		candlesAdded: Candle[]
 	}
 }
 

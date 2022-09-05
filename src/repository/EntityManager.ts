@@ -41,7 +41,15 @@ export default class EntityManager {
 		return this.repositories[repositoryName]
 	}
 
-	public getEventBus(): EventBus<RepositoryEvents> {
-		return this.eventBus
+	public on<T extends keyof RepositoryEvents>(
+		eType: T,
+		id: string,
+		callback: (data: RepositoryEvents[T]) => void
+	) {
+		this.eventBus.on(eType, id, callback)
+	}
+
+	public off<T extends keyof RepositoryEvents>(eType: T, id: string) {
+		this.eventBus.off(eType, id)
 	}
 }

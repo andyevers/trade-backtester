@@ -170,7 +170,7 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 			}
 			this.eventBus.dispatch('priceHistoryRepository.addCandles', {
 				entity: priceHistory,
-				candles: candles
+				candlesAdded: candles
 			})
 			this.update(priceHistory.id, {})
 		} else {
@@ -190,7 +190,7 @@ export default class PriceHistoryRepository extends Repository<PriceHistory> {
 			priceHistory.candles.push(candle)
 			this.eventBus.dispatch('priceHistoryRepository.addCandles', {
 				entity: priceHistory,
-				candles: [candle]
+				candlesAdded: [candle]
 			})
 			this.update(priceHistory.id, {})
 		} else {

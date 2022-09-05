@@ -3,6 +3,7 @@ import EntityManager from '@src/repository/EntityManager'
 import PositionService from '@src/service/PositionService'
 import { Candle } from '@src/types'
 import { AccountService } from '@src/service'
+import { Position } from '@src/repository'
 describe('AccountService', () => {
 	let positionService: PositionService
 	let entityManager: EntityManager
@@ -339,5 +340,114 @@ describe('AccountService', () => {
 
 		const triggerRepository = entityManager.getRepository('trigger')
 		expect(triggerRepository.getAll().filter((trigger) => trigger.isActive)).toHaveLength(0)
+	})
+
+	test('position test', () => {
+		const positionLongA = accountService.placeOrder({
+			accountId: account.id,
+			orderPrice: candleA.close,
+			orderQty: 30,
+			orderTime: candleA.time,
+			symbol: 'AAPL',
+			type: 'LONG',
+			orderDuration: 'DAY',
+			latestCandle: candleA
+		})
+
+		const positionLongB = accountService.placeOrder({
+			accountId: account.id,
+			orderPrice: candleB.close,
+			orderQty: 25,
+			orderTime: candleB.time,
+			symbol: 'AAPL',
+			type: 'LONG',
+			orderDuration: 'DAY',
+			latestCandle: candleB
+		})
+		const positionShortA = accountService.placeOrder({
+			accountId: account.id,
+			orderPrice: candleA.close,
+			orderQty: 15,
+			orderTime: candleA.time,
+			symbol: 'AAPL',
+			type: 'SHORT',
+			orderDuration: 'DAY',
+			latestCandle: candleA
+		})
+		const positionShortB = accountService.placeOrder({
+			accountId: account.id,
+			orderPrice: candleB.close,
+			orderQty: 10,
+			orderTime: candleB.time,
+			symbol: 'AAPL',
+			type: 'SHORT',
+			orderDuration: 'DAY',
+			latestCandle: candleB
+		})
+
+		const positions = [positionLongA, positionLongB, positionShortA, positionShortB]
+
+		for (const position of positions) {
+			accountService.closeOrder({
+				latestCandle: candleC,
+				id: position.id,
+				orderExitTime: candleC.time,
+				orderExitPrice: candleC.close
+			})
+		}
+
+		let costLong = 0
+		let qtyLong = 0
+
+		let costShort = 0
+		let qtyShort = 0
+
+		const addLong = (position: Position) => {
+			qtyLong += position.qty as number
+			costLong += position.cost as number
+		}
+
+		const addShort = (position: Position) => {
+			qtyShort += position.qty as number
+			costShort += position.cost as number
+		}
+
+		const removeLong = (position: Position) => {
+			qtyLong -= position.qty as number
+			costLong -= position.cost as number
+		}
+
+		const removeShort = (position: Position) => {
+			qtyShort -= position.qty as number
+			costShort -= position.cost as number
+		}
+
+		addLong(positionLongA)
+		addLong(positionLongB)
+
+		addShort(positionShortA)
+		addShort(positionShortB)
+
+		const profit = positions.reduce((acc, position) => acc + (position.exitProfit as number), 0)
+
+		const valueLong = candleC.close * qtyLong
+		const profitLong = valueLong - costLong
+
+		const valueShort = candleC.close * qtyShort
+		const profitShort = costShort - valueShort
+
+		console.log({ profit, profitLong, profitShort })
+		// candleC.close * qtyLong - costLong + costShort - candleC.close * qtyShort
+		// console.log(profitLong)
+
+		// console.log(avgPrice)
+
+		console.log(positionLongA, positionLongB)
+		// console.log(profitShort + profitLong, profit)
+		// console.log(profit)
+
+		// console.log(avgPrice)
+		// console.log((positionLongA.entryPrice as number) + (positionLongB.entryPrice as number) / 2)
+		// console.log(positionLongA)
 	})
 })

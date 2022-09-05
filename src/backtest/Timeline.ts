@@ -150,13 +150,27 @@ export default class Timeline {
 		}
 	}
 
+	public getTimelineIndex(): number {
+		return this.timelineIndex
+	}
+
 	/**
 	 * Moves all candles with datetime at or before this time to 'current' and 'past' candles
 	 */
 	public setTime(time: number, callbacks?: SetTimeCallbacks): void {
 		const { onNewCandle = () => {}, onNewCandleBuilt = () => {} } = callbacks || this.candleCallbacks
+
+		const timeTimelineEnd = this.timeline[this.timeline.length - 1]
+		if (time > timeTimelineEnd) {
+			throw new Error(
+				`You cannot set the time past later than the final timeline value ${timeTimelineEnd}`
+			)
+		}
+
 		if (time < this.time) {
-			throw new Error('You cannot go back in time. use reset() to start over')
+			throw new Error(
+				`You cannot go back in time from ${this.time} to ${time}. use reset() to start over.`
+			)
 		}
 
 		const builtCandleSymbols: { [symbol: string]: boolean } = {}

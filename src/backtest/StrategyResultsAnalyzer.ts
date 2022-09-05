@@ -1,31 +1,44 @@
-import { Account, Position, TimeframeType } from '@src/repository'
-import { Candle, CandleBySymbol } from '@src/types'
+import { Account, EntityManager, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
+import { Candle } from '@src/types'
+import { CurrentTestData } from '.'
+import Drawdown, { Calculation, CalculationHandlerName } from './calculations/Drawdown'
+import Equity from './calculations/Equity'
+import TradeStats from './calculations/TradeStats'
 
-interface StrategyResultsAnalyzerArgs {
+export interface StrategyResultsWithEntities extends StrategyResults {
 	positions: Position[]
-	candles: Candle[]
+	priceHistory: PriceHistoryCreateParams
 	account: Account
+	equityHistory: number[]
+	candlesTested: Candle[]
 }
+
+/**
+ * Props that require looping candles
+ * equityHistory
+ * equityMin
+ * equityMax
+ *
+ * returns
+ * winPercent
+ * tradeCount
+ */
 
 export interface StrategyResults {
 	startTime: number // start
 	endTime: number // end
 	daysCount: number // duration
-
 	timeframe: TimeframeType
 	symbol: string
 
 	candleCount: number
 	candleCountInPositions: number // exposure
-
 	equityEnding: number
 	equityMax: number
 	equityMin: number
-
-	returnPercentEnding: number
+	returnPercent: number
 	returnPercentYearly: number
 	returnPercentAvg: number
-
 	volatilityPercentYearly: number
 
 	//TRADES
@@ -62,44 +75,81 @@ export interface StrategyResults {
 	calmarRatio: number
 }
 
-/*
-Start                     2004-08-19 00:00:00
-End                       2013-03-01 00:00:00
-Duration                   3116 days 00:00:00
-Exposure Time [%]                       94.27
-Equity Final [$]                     68935.12
-Equity Peak [$]                      68991.22
-Return [%]                             589.35
-Buy & Hold Return [%]                  703.46
-Return (Ann.) [%]                       25.42
-Volatility (Ann.) [%]                   38.43
-Sharpe Ratio                             0.66
-Sortino Ratio                            1.30
-Calmar Ratio                             0.77
-Max. Drawdown [%]                      -33.08
-Avg. Drawdown [%]                       -5.58
-Max. Drawdown Duration      688 days 00:00:00
-Avg. Drawdown Duration       41 days 00:00:00
-# Trades                                   93
-Win Rate [%]                            53.76
-Best Trade [%]                          57.12
-Worst Trade [%]                        -16.63
-Avg. Trade [%]                           1.96
-Max. Trade Duration         121 days 00:00:00
-Avg. Trade Duration          32 days 00:00:00
-Profit Factor                            2.13
-Expectancy [%]                           6.91
-SQN                                      1.78
-_strategy              SmaCross(n1=10, n2=20)
-*/
+interface WatchStrategyParams {
+	entityManager: EntityManager
+	accountId: number
+	priceHistory: PriceHistoryCreateParams
+	strategyName: string
+}
+
+interface StrategyResultsAnalyzerArgs {
+	calculations: Partial<Calculations>
+}
+
+interface Calculations {
+	drawdown: Drawdown
+	equity: Equity
+	tradeStats: TradeStats
+}
 
 export default class StrategyResultsAnalyzer {
-	// private readonly startingCash: number
+	private readonly calculations: Calculations
 
-	constructor(args: StrategyResultsAnalyzerArgs) {
-		// const { startingCash } = args
-		// this.startingCash = startingCash
+	private readonly watchedCalculationsMap: {
+		[K in CalculationHandlerName]: Required<Calculation<any>>[K][]
+	} = {
+		handleStart: [],
+		handleCandle: [],
+		handlePositionOpen: [],
+		handlePositionClose: [],
+		handleEnd: []
 	}
 
-	// public analyze(): void {
+	constructor(args?: StrategyResultsAnalyzerArgs) {
+		const { calculations } = args || {}
+
+		const {
+			drawdown = new Drawdown(),
+			equity = new Equity(),
+			tradeStats = new TradeStats()
+		} = calculations || {}
+
+		this.calculations = {
+			drawdown,
+			equity,
+			tradeStats
+		}
+
+		this.setWatchedCalculations(['drawdown', 'equity', 'tradeStats'])
+	}
+
+	public setWatchedCalculations(calculationNames: (keyof Calculations)[]) {
+		for (const calculationName of calculationNames) {
+			const calculation = this.calculations[calculationName]
+			for (const handlerName of calculation.handlerNames) {
+				const calculationMethod = calculation[handlerName as keyof typeof calculation] as any
+				this.watchedCalculationsMap[handlerName].push(calculationMethod.bind(calculation))
+			}
+		}
+	}
+
+	public handleCandle(data: CurrentTestData) {
+		this.watchedCalculationsMap.handleCandle.forEach((calculation) => calculation(data))
+	}
+
+	public handlePositionOpen(data: CurrentTestData) {
+		this.watchedCalculationsMap.handlePositionOpen.forEach((calculation) => calculation(data))
+	}
+
+	public handlePositionClose(data: CurrentTestData) {
+		this.watchedCalculationsMap.handlePositionClose.forEach((calculation) => calculation(data))
+	}
+
+	public handleEnd(data: CurrentTestData) {
+		this.watchedCalculationsMap.handleEnd.forEach((calculation) => calculation(data))
+	}
+
+	public handleStart(data: CurrentTestData) {
+		this.watchedCalculationsMap.handleStart.forEach((calculation) => calculation(data))
+	}
 }

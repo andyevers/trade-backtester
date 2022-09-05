@@ -11,6 +11,8 @@ import { Strategy } from '@src/strategy/DemoStrategy'
 import { Candle, CandleBySymbol } from '@src/types'
 
 describe('Performance', () => {
+	const USE_LOGS = false
+
 	let backtestClient: BacktestClient
 	let entityManager: EntityManager
 	let broker: Broker
@@ -30,6 +32,7 @@ describe('Performance', () => {
 	}
 
 	const logResult = (result: { name: string; iterations: number; time: number }) => {
+		if (!USE_LOGS) return
 		const cyan = '\x1b[36m'
 		const reset = '\x1b[0m'
 		console.log(
@@ -141,6 +144,11 @@ describe('Performance', () => {
 		 * iterations: 100,000
 		 * time:       46ms
 		 * notes:      Misc changes
+		 *
+		 * Results 2022-09-04
+		 * iterations: 100,000
+		 * time:       50ms
+		 * notes:      added eventBus and check to see if time is later than final timeline time
 		 */
 		logResult({ name: 'Timeline.setTime', iterations: i, time })
 	})
