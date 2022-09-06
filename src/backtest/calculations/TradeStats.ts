@@ -21,10 +21,17 @@ interface TradeStatsResults {
 	winCount: number
 	winCountLong: number
 	winCountShort: number
+
+	countCandlesInPositions: number
 }
 
 export default class TradeStats implements Calculation<TradeStatsResults> {
-	public readonly handlerNames: CalculationHandlerName[] = ['handlePositionClose', 'handleEnd']
+	public readonly handlerNames: CalculationHandlerName[] = [
+		'handlePositionClose',
+		'handlePositionOpen',
+		'handleCandle',
+		'handleEnd'
+	]
 
 	private readonly results: TradeStatsResults = {
 		tradeCount: 0,
@@ -44,12 +51,30 @@ export default class TradeStats implements Calculation<TradeStatsResults> {
 
 		winCount: 0,
 		winCountLong: 0,
-		winCountShort: 0
+		winCountShort: 0,
+
+		countCandlesInPositions: 0
+	}
+
+	private readonly openPositionIds = new Set<number>()
+
+	public handleCandle(): void {
+		if (this.openPositionIds.size > 0) {
+			this.results.countCandlesInPositions++
+		}
+	}
+
+	public handlePositionOpen(data: CurrentTestData): void {
+		const position = data.currentPosition as Position<'OPEN'>
+		this.openPositionIds.add(position.id)
 	}
 
 	public handlePositionClose(data: CurrentTestData): void {
 		const position = data.currentPosition as Position<'CLOSED'>
 		const { exitProfit } = position
+
+		this.openPositionIds.delete(position.id)
+
 		const profitPercent = exitProfit / position.cost
 		const durationMs = position.exitTime - position.entryTime
 

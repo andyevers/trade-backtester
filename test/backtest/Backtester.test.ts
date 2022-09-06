@@ -72,7 +72,7 @@ describe('Broker', () => {
 
 		let candlesDay: typeof demoCandles = []
 
-		const ITERATIONS = 10000
+		const ITERATIONS = 300
 
 		for (let i = 0; i < ITERATIONS; i++) {
 			candlesDay.push(...demoCandles)
@@ -109,27 +109,27 @@ describe('Broker', () => {
 		const results = backtester.runTest({
 			init(backtestClient) {
 				client = backtestClient
-				client.placeOrder({
-					orderQty: 30,
-					symbol: 'AAPL',
-					type: 'LONG'
-				})
+				// client.placeOrder({
+				// 	orderQty: 30,
+				// 	symbol: 'AAPL',
+				// 	type: 'LONG'
+				// })
 				// console.log('init')
 			},
 			next(candleBySymbol) {
 				if (i % 3 === 0) {
-					client.placeOrder({
-						orderQty: 30,
-						symbol: 'AAPL',
-						type: 'LONG'
-					})
+					// client.placeOrder({
+					// 	orderQty: 30,
+					// 	symbol: 'AAPL',
+					// 	type: 'LONG'
+					// })
 					orderCount++
 				}
 				if (i % 5 === 0) {
-					client.closeOrders({
-						symbol: 'AAPL',
-						type: 'LONG'
-					})
+					// client.closeOrders({
+					// 	symbol: 'AAPL',
+					// 	type: 'LONG'
+					// })
 					// orderCount++
 				}
 				i++

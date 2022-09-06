@@ -62,9 +62,6 @@ export default class Drawdown implements Calculation<DrawdownResults> {
 		}
 	}
 
-	/**
-	 * Must fire after every candle, after positions are added and before positions are removed.
-	 */
 	public handleCandle(data: CurrentTestData) {
 		const candle = data.currentCandle
 		// check if is new low
@@ -146,12 +143,12 @@ export default class Drawdown implements Calculation<DrawdownResults> {
 			const lowestLow = this.positionIdsDrawdownPrices[position.id]
 			this.lowestLowsBuckets[lowestLow].delete(position.id)
 			delete this.positionIdsDrawdownPrices[position.id]
-			drawdownPercent = ((lowestLow - position.entryPrice) / position.entryPrice) * 100
+			drawdownPercent = (lowestLow - position.entryPrice) / position.entryPrice
 		} else {
 			const highestHigh = this.positionIdsDrawdownPrices[position.id]
 			this.highestHighsBuckets[highestHigh].delete(position.id)
 			delete this.positionIdsDrawdownPrices[position.id]
-			drawdownPercent = ((highestHigh - position.entryPrice) / position.entryPrice) * 100
+			drawdownPercent = (highestHigh - position.entryPrice) / position.entryPrice
 		}
 
 		this.drawdownPercentByPositionId[position.id] = drawdownPercent

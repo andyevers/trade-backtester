@@ -98,6 +98,7 @@ export default class Backtester {
 				this.currentTestData.currentPosition = position
 				this.strategyResultsAnalyzer.handlePositionOpen(this.currentTestData)
 			}
+			this.currentTestData.currentPosition = null
 		})
 	}
 

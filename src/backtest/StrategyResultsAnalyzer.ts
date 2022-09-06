@@ -1,4 +1,4 @@
-import { Account, EntityManager, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
+import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
 import { Candle } from '@src/types'
 import { CurrentTestData } from '.'
 import Drawdown, { Calculation, CalculationHandlerName } from './calculations/Drawdown'
@@ -12,17 +12,6 @@ export interface StrategyResultsWithEntities extends StrategyResults {
 	equityHistory: number[]
 	candlesTested: Candle[]
 }
-
-/**
- * Props that require looping candles
- * equityHistory
- * equityMin
- * equityMax
- *
- * returns
- * winPercent
- * tradeCount
- */
 
 export interface StrategyResults {
 	startTime: number // start
@@ -75,13 +64,6 @@ export interface StrategyResults {
 	calmarRatio: number
 }
 
-interface WatchStrategyParams {
-	entityManager: EntityManager
-	accountId: number
-	priceHistory: PriceHistoryCreateParams
-	strategyName: string
-}
-
 interface StrategyResultsAnalyzerArgs {
 	calculations: Partial<Calculations>
 }
@@ -95,14 +77,8 @@ interface Calculations {
 export default class StrategyResultsAnalyzer {
 	private readonly calculations: Calculations
 
-	private readonly watchedCalculationsMap: {
+	private watchedCalculationsMap!: {
 		[K in CalculationHandlerName]: Required<Calculation<any>>[K][]
-	} = {
-		handleStart: [],
-		handleCandle: [],
-		handlePositionOpen: [],
-		handlePositionClose: [],
-		handleEnd: []
 	}
 
 	constructor(args?: StrategyResultsAnalyzerArgs) {
@@ -124,6 +100,13 @@ export default class StrategyResultsAnalyzer {
 	}
 
 	public setWatchedCalculations(calculationNames: (keyof Calculations)[]) {
+		this.watchedCalculationsMap = {
+			handleStart: [],
+			handleCandle: [],
+			handlePositionOpen: [],
+			handlePositionClose: [],
+			handleEnd: []
+		}
 		for (const calculationName of calculationNames) {
 			const calculation = this.calculations[calculationName]
 			for (const handlerName of calculation.handlerNames) {
