@@ -23,7 +23,7 @@ interface DrawdownResults {
 	drawdownPercentAvg: number
 }
 
-export default class Drawdown implements Calculation<DrawdownResults> {
+export default class PositionsDrawdown implements Calculation<DrawdownResults> {
 	// the values in here should always be ascending.
 	public readonly handlerNames: CalculationHandlerName[] = [
 		'handleCandle',

@@ -1,6 +1,6 @@
 import { Position } from '@src/repository'
 import { CurrentTestData } from '../Backtester'
-import { Calculation, CalculationHandlerName } from './Drawdown'
+import { Calculation, CalculationHandlerName } from './PositionsDrawdown'
 
 interface ReturnResults<> {
 	returnPercentMax: number

@@ -1,6 +1,6 @@
 import { Position } from '@src/repository'
 import { CurrentTestData } from '..'
-import { Calculation, CalculationHandlerName } from './Drawdown'
+import { Calculation, CalculationHandlerName } from './PositionsDrawdown'
 
 interface TradeStatsResults {
 	tradeCount: number

@@ -1,7 +1,7 @@
 import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
 import { Candle } from '@src/types'
 import { CurrentTestData } from '.'
-import Drawdown, { Calculation, CalculationHandlerName } from './calculations/Drawdown'
+import Drawdown, { Calculation, CalculationHandlerName } from './calculations/PositionsDrawdown'
 import Equity from './calculations/Equity'
 import TradeStats from './calculations/TradeStats'
 
@@ -22,6 +22,7 @@ export interface StrategyResults {
 
 	candleCount: number
 	candleCountInPositions: number // exposure
+
 	equityEnding: number
 	equityMax: number
 	equityMin: number
