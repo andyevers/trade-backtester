@@ -1,6 +1,6 @@
 import { Account } from '@src/repository'
 import { CurrentTestData } from '..'
-import { Calculation, CalculationHandlerName } from './PositionsDrawdown'
+import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
 
 interface EquityResults {
 	equityHistory: number[]
@@ -13,7 +13,16 @@ interface EquityResults {
 	drawdownPercentAvg: number
 	drawdownDurationMax: number
 
+	/**
+	 * Indicates relationship between risk and return. Uses 1 year average return.
+	 * @see https://corporatefinanceinstitute.com/resources/knowledge/trading-investing/calmar-ratio/
+	 */
 	calmarRatio: number
+
+	/**
+	 *
+	 */
+	sharpeRatio: number
 }
 
 export default class Equity implements Calculation<EquityResults> {
@@ -47,7 +56,8 @@ export default class Equity implements Calculation<EquityResults> {
 		drawdownHistory: [],
 		drawdownPercentAvg: 0,
 		drawdownPercentMax: 0,
-		calmarRatio: 0
+		calmarRatio: 0,
+		sharpeRatio: 0
 	}
 
 	public handleCandle(data: CurrentTestData): void {
@@ -106,9 +116,21 @@ export default class Equity implements Calculation<EquityResults> {
 		const equityStarting = startingCash - startingMarginDebt
 		const profit = this.results.equityEnding - equityStarting
 
+		// TODO: Should we be using the return of the positions or the account?
 		const returnPercent = profit / equityStarting
 		const returnPercentYearly = returnPercent / years
 		this.results.calmarRatio = returnPercentYearly / this.results.drawdownPercentMax
+
+		// = np.sqrt((day_returns.var(ddof=int(bool(day_returns.shape))) + (1 + gmean_day_return)**2)**annual_trading_days - (1 + gmean_day_return)**(2*annual_trading_days)) * 100
+		/* s.loc['Volatility (Ann.) [%]'] = 
+        np.sqrt(
+            (day_returns.var(ddof=int(bool(day_returns.shape))) 
+            + (1 + gmean_day_return)**2)**annual_trading_days 
+            - (1 + gmean_day_return)**(2*annual_trading_days)
+        ) * 100  # noqa: E501
+        
+        */
+		const volatilityYearly = Math.sqrt((returnPercentYearly + 1) ** 2 - 1) * 100
 	}
 
 	public getResults(): EquityResults {

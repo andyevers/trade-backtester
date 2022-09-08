@@ -1,5 +1,7 @@
 import { Backtester } from '@src/backtest'
 import Broker from '@src/backtest/Broker'
+import IncrementalCalculator from '@src/backtest/calculations/IncrementalCalculator'
+import Std from '@src/backtest/calculations/MovingStdDev'
 import Timeline from '@src/backtest/Timeline'
 import { BaseClient } from '@src/client'
 import { Account } from '@src/repository/AccountRepository'
@@ -72,7 +74,7 @@ describe('Broker', () => {
 
 		let candlesDay: typeof demoCandles = []
 
-		const ITERATIONS = 300
+		const ITERATIONS = 10000
 
 		for (let i = 0; i < ITERATIONS; i++) {
 			candlesDay.push(...demoCandles)

@@ -1,9 +1,26 @@
 import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
 import { Candle } from '@src/types'
 import { CurrentTestData } from '.'
-import Drawdown, { Calculation, CalculationHandlerName } from './calculations/PositionsDrawdown'
+import PositionsDrawdown from './calculations/PositionsDrawdown'
 import Equity from './calculations/Equity'
 import TradeStats from './calculations/TradeStats'
+
+export type CalculationHandlerName =
+	| 'handlePositionOpen'
+	| 'handlePositionClose'
+	| 'handleCandle'
+	| 'handleStart'
+	| 'handleEnd'
+
+export interface Calculation<T> {
+	handlePositionOpen?(data: CurrentTestData): void
+	handlePositionClose?(data: CurrentTestData): void
+	handleCandle?(data: CurrentTestData): void
+	handleStart?(data: CurrentTestData): void
+	handleEnd?(data: CurrentTestData): void
+	getResults(): T
+	handlerNames: CalculationHandlerName[]
+}
 
 export interface StrategyResultsWithEntities extends StrategyResults {
 	positions: Position[]
@@ -70,7 +87,7 @@ interface StrategyResultsAnalyzerArgs {
 }
 
 interface Calculations {
-	drawdown: Drawdown
+	drawdown: PositionsDrawdown
 	equity: Equity
 	tradeStats: TradeStats
 }
@@ -86,7 +103,7 @@ export default class StrategyResultsAnalyzer {
 		const { calculations } = args || {}
 
 		const {
-			drawdown = new Drawdown(),
+			drawdown = new PositionsDrawdown(),
 			equity = new Equity(),
 			tradeStats = new TradeStats()
 		} = calculations || {}

@@ -1,22 +1,6 @@
 import { Position } from '@src/repository'
 import { CurrentTestData } from '..'
-
-export type CalculationHandlerName =
-	| 'handlePositionOpen'
-	| 'handlePositionClose'
-	| 'handleCandle'
-	| 'handleStart'
-	| 'handleEnd'
-
-export interface Calculation<T> {
-	handlePositionOpen?(data: CurrentTestData): void
-	handlePositionClose?(data: CurrentTestData): void
-	handleCandle?(data: CurrentTestData): void
-	handleStart?(data: CurrentTestData): void
-	handleEnd?(data: CurrentTestData): void
-	getResults(): T
-	handlerNames: CalculationHandlerName[]
-}
+import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
 
 interface DrawdownResults {
 	drawdownPercentMax: number
