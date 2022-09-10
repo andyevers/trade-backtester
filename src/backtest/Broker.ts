@@ -2,14 +2,14 @@ import { CandleBySymbol } from '@src/types'
 import {
 	Account,
 	EntityManager,
+	GetCandlesParams,
 	Position,
 	PositionCreateParams,
 	PositionsById,
 	PositionsByIdLookupFilters,
 	PositionType,
 	PriceHistory,
-	PriceHistoryCreateParams,
-	TimeframeType
+	PriceHistoryCreateParams
 } from '@src/repository'
 import { ServiceManager } from '@src/service'
 import Timeline, { NewCandleData } from './Timeline'
@@ -18,13 +18,6 @@ export interface BrokerArgs {
 	entityManager: EntityManager
 	serviceManager?: ServiceManager
 	timeline?: Timeline
-}
-
-export interface GetCandlesParams {
-	startTime?: number
-	endTime?: number
-	symbol: string
-	timeframe: TimeframeType
 }
 
 export interface AccountWithPositions extends Account {

@@ -1,8 +1,8 @@
-import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
+import { Account, Position, PriceHistoryCreateParams } from '@src/repository'
 import { Candle } from '@src/types'
 import { CurrentTestData } from '.'
-import PositionsDrawdown from './calculations/PositionsDrawdown'
 import Equity from './calculations/Equity'
+import PositionsDrawdown from './calculations/PositionsDrawdown'
 import TradeStats from './calculations/TradeStats'
 
 export type CalculationHandlerName =

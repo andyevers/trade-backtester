@@ -1,5 +1,5 @@
 import { Candle } from '@src/types'
-import Repository, { Entity, RepositoryArgs, RepositoryEvent, RepositoryEvents } from './Repository'
+import Repository, { Entity, RepositoryArgs } from './Repository'
 
 export type TimeframeType =
 	| 'minute'
