@@ -10,8 +10,8 @@ import {
 	PriceHistory,
 	PriceHistoryCreateParams,
 	TimeframeType
-} from '../repository'
-import { ServiceManager } from '../service'
+} from '@src/repository'
+import { ServiceManager } from '@src/service'
 import Timeline, { NewCandleData } from './Timeline'
 
 export interface BrokerArgs {

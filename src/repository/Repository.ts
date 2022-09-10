@@ -1,5 +1,5 @@
 import { Candle } from '@src/types'
-import { EventBus } from '../events'
+import { EventBus } from '@src/events'
 import { Account } from './AccountRepository'
 import { Position } from './PositionRepository'
 import { PriceHistory } from './PriceHistoryRepository'

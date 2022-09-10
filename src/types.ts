@@ -1,3 +1,5 @@
+import { BaseClient } from '@src/client'
+
 export interface Candle {
 	open: number
 	close: number

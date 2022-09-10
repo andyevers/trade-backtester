@@ -1,6 +1,6 @@
 import { Position } from '@src/repository'
 import { CurrentTestData } from '..'
-import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
+import { Calculation, CalculationHandlerName } from '@src/backtest'
 
 interface DrawdownResults {
 	drawdownPercentMax: number

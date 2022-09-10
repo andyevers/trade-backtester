@@ -4,8 +4,8 @@ import {
 	PositionOrderType,
 	PositionOrderDuration,
 	Position
-} from '../repository'
-import { Candle } from '../types'
+} from '@src/repository'
+import { Candle } from '@src/types'
 import PositionService from './PositionService'
 
 export interface AccountServiceArgs {

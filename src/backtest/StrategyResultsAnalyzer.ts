@@ -1,5 +1,5 @@
-import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '../repository'
-import { Candle } from '../types'
+import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
+import { Candle } from '@src/types'
 import { CurrentTestData } from '.'
 import PositionsDrawdown from './calculations/PositionsDrawdown'
 import Equity from './calculations/Equity'

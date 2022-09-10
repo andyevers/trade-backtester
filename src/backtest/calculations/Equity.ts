@@ -1,6 +1,6 @@
-import { Account } from '../../repository'
+import { Account } from '@src/repository'
 import { CurrentTestData } from '..'
-import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
+import { Calculation, CalculationHandlerName } from '@src/backtest'
 
 interface EquityResults {
 	equityHistory: number[]

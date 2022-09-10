@@ -84,4 +84,8 @@ describe('Broker', () => {
 			startTime: MS_TIME_START_AAPL
 		})
 	})
+
+	test('runTest', () => {
+		//TODO: Create test.
+	})
 })

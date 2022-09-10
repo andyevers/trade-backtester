@@ -1,3 +1,5 @@
 unused 
 test
 examples
+coverage 
+node_modules 

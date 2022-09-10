@@ -1,4 +1,4 @@
-import { EventBus } from '@src/repository'
+import { EventBus } from '@src/events'
 import PositionRepository, {
 	PositionsByIdLookupFilters,
 	PositionStatus,

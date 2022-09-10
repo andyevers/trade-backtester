@@ -1,6 +1,6 @@
-import { Position } from '../../repository'
-import { CurrentTestData } from '..'
-import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
+import { Position } from '@src/repository'
+import { CurrentTestData } from '@src/backtest'
+import { Calculation, CalculationHandlerName } from '@src/backtest'
 
 interface TradeStatsResults {
 	tradeCount: number
