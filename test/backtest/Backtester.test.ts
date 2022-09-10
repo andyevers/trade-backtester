@@ -1,9 +1,6 @@
 import { Backtester } from '@src/backtest'
 import Broker from '@src/backtest/Broker'
-import IncrementalCalculator from '@src/backtest/calculations/IncrementalCalculator'
-import Std from '@src/backtest/calculations/MovingStdDev'
 import Timeline from '@src/backtest/Timeline'
-import { BaseClient } from '@src/client'
 import { Account } from '@src/repository/AccountRepository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
@@ -74,7 +71,7 @@ describe('Broker', () => {
 
 		let candlesDay: typeof demoCandles = []
 
-		const ITERATIONS = 10000
+		const ITERATIONS = 100000
 
 		for (let i = 0; i < ITERATIONS; i++) {
 			candlesDay.push(...demoCandles)
@@ -86,73 +83,5 @@ describe('Broker', () => {
 			startingCash: 10000,
 			startTime: MS_TIME_START_AAPL
 		})
-	})
-
-	const logResult = (result: { name: string; iterations: number; time: number }) => {
-		// if (!USE_LOGS) return
-		const cyan = '\x1b[36m'
-		const reset = '\x1b[0m'
-		console.log(
-			`${cyan}${result.name}${reset}`,
-			'\n',
-			`iterations: ${result.iterations.toLocaleString('en-US')}`,
-			'\n',
-			`time:       ${Math.round(result.time).toLocaleString('en-US')}ms`
-		)
-	}
-
-	test('runTest', () => {
-		let i = 0
-		let client: BaseClient
-
-		let orderCount = 0
-		// let equity2 =
-		let time = performance.now()
-		const results = backtester.runTest({
-			init(backtestClient) {
-				client = backtestClient
-				// client.placeOrder({
-				// 	orderQty: 30,
-				// 	symbol: 'AAPL',
-				// 	type: 'LONG'
-				// })
-				// console.log('init')
-			},
-			next(candleBySymbol) {
-				if (i % 3 === 0) {
-					// client.placeOrder({
-					// 	orderQty: 30,
-					// 	symbol: 'AAPL',
-					// 	type: 'LONG'
-					// })
-					orderCount++
-				}
-				if (i % 5 === 0) {
-					// client.closeOrders({
-					// 	symbol: 'AAPL',
-					// 	type: 'LONG'
-					// })
-					// orderCount++
-				}
-				i++
-			}
-		})
-
-		time = performance.now() - time
-
-		const entityManager = backtester.getEntityManager()
-		const accountRepository = entityManager.getRepository('account')
-		const positionRepository = entityManager.getRepository('position')
-		account = accountRepository.get(1) as Account
-		const positions = positionRepository.getAll()
-
-		// console.log(orderCount)
-		// console.log(account)
-		// console.log(positions.length)
-		// console.log(results)
-		logResult({ name: 'Timeline.setTime', iterations: i, time })
-		// console.log(backtest.get)
-		// const analyzer = backtester.getResultsAnalyzer()
-		// console.log(analyzer.stopWatchingStrategy())
 	})
 })

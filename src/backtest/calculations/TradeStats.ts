@@ -1,4 +1,4 @@
-import { Position } from '@src/repository'
+import { Position } from '../../repository'
 import { CurrentTestData } from '..'
 import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
 
@@ -38,7 +38,7 @@ export default class TradeStats implements Calculation<TradeStatsResults> {
 		tradeCountLong: 0,
 		tradeCountShort: 0,
 
-		tradeProfitPercentBest: 0,
+		tradeProfitPercentBest: -Infinity,
 		tradeProfitPercentWorst: Infinity,
 		tradeProfitPercentAvg: 0,
 
@@ -85,9 +85,9 @@ export default class TradeStats implements Calculation<TradeStatsResults> {
 		if (profitPercent < this.results.tradeProfitPercentWorst) {
 			this.results.tradeProfitPercentWorst = profitPercent
 		}
-		this.results.tradeProfitPercentAvg =
-			(this.results.tradeProfitPercentAvg * (this.results.tradeCount - 1) + profitPercent) /
-			this.results.tradeCount
+		// this.results.tradeProfitPercentAvg =
+		// 	(this.results.tradeProfitPercentAvg * (this.results.tradeCount - 1) + profitPercent) /
+		// 	this.results.tradeCount
 
 		if (profitPercent > 0) {
 			this.results.winCount++
@@ -117,8 +117,12 @@ export default class TradeStats implements Calculation<TradeStatsResults> {
 	}
 
 	public handleEnd(data: CurrentTestData): void {
+		const { account } = data
 		if (this.results.tradeProfitPercentWorst === Infinity) {
 			this.results.tradeProfitPercentWorst = 0
+		}
+		if (this.results.tradeProfitPercentBest === -Infinity) {
+			this.results.tradeProfitPercentBest = 0
 		}
 	}
 

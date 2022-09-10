@@ -7,11 +7,11 @@ import { Account } from '@src/repository'
 import EntityManager from '@src/repository/EntityManager'
 import { PriceHistoryCreateParams } from '@src/repository/PriceHistoryRepository'
 import { ServiceManager } from '@src/service'
-import { Strategy } from '@src/strategy/DemoStrategy'
+import { Strategy } from '@src/types'
 import { Candle, CandleBySymbol } from '@src/types'
 
 describe('Performance', () => {
-	const USE_LOGS = false
+	const USE_LOGS = true
 
 	let backtestClient: BacktestClient
 	let entityManager: EntityManager

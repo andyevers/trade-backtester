@@ -291,10 +291,13 @@ export default class Timeline {
 			this.currentIndexes[stfKey] = -1
 		}
 
+		// TODO: do we need to clone?
 		// prevents the original object from being manipulated.
-		this.getAllCandlesClone = new Function(
-			`return ${JSON.stringify(candlesBySymbolTimeframe)}`
-		) as () => CandlesBySymbolTimeframe
+		// this.getAllCandlesClone = new Function(
+		// 	`return ${JSON.stringify(candlesBySymbolTimeframe)}`
+		// ) as () => CandlesBySymbolTimeframe
+
+		this.getAllCandlesClone = () => candlesBySymbolTimeframe
 
 		this.candlesByStfKey = this.getAllCandlesClone()
 

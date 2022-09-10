@@ -1,4 +1,4 @@
-import { Account } from '@src/repository'
+import { Account } from '../../repository'
 import { CurrentTestData } from '..'
 import { Calculation, CalculationHandlerName } from '../StrategyResultsAnalyzer'
 
@@ -8,7 +8,6 @@ interface EquityResults {
 	equityMin: number
 	equityEnding: number
 
-	drawdownHistory: number[]
 	drawdownPercentMax: number
 	drawdownPercentAvg: number
 	drawdownDurationMax: number
@@ -53,7 +52,6 @@ export default class Equity implements Calculation<EquityResults> {
 		equityEnding: 0,
 
 		drawdownDurationMax: 0,
-		drawdownHistory: [],
 		drawdownPercentAvg: 0,
 		drawdownPercentMax: 0,
 		calmarRatio: 0,
@@ -74,7 +72,6 @@ export default class Equity implements Calculation<EquityResults> {
 
 		// Drawdown
 		const drawdownCurrent = (this.results.equityMax - equity) / this.results.equityMax
-		this.results.drawdownHistory.push(drawdownCurrent)
 
 		if (equity < this.results.equityMax) {
 			if (this.currentDrawdownStartTime === null) {
@@ -110,27 +107,13 @@ export default class Equity implements Calculation<EquityResults> {
 
 		const { startingCash, startingMarginDebt } = account
 
-		const MS_YEAR = 31536000000
-		const years = (currentCandle.time - startingCandle.time) / MS_YEAR
-
 		const equityStarting = startingCash - startingMarginDebt
 		const profit = this.results.equityEnding - equityStarting
 
 		// TODO: Should we be using the return of the positions or the account?
 		const returnPercent = profit / equityStarting
-		const returnPercentYearly = returnPercent / years
-		this.results.calmarRatio = returnPercentYearly / this.results.drawdownPercentMax
 
-		// = np.sqrt((day_returns.var(ddof=int(bool(day_returns.shape))) + (1 + gmean_day_return)**2)**annual_trading_days - (1 + gmean_day_return)**(2*annual_trading_days)) * 100
-		/* s.loc['Volatility (Ann.) [%]'] = 
-        np.sqrt(
-            (day_returns.var(ddof=int(bool(day_returns.shape))) 
-            + (1 + gmean_day_return)**2)**annual_trading_days 
-            - (1 + gmean_day_return)**(2*annual_trading_days)
-        ) * 100  # noqa: E501
-        
-        */
-		const volatilityYearly = Math.sqrt((returnPercentYearly + 1) ** 2 - 1) * 100
+		this.results.calmarRatio = returnPercent / this.results.drawdownPercentMax
 	}
 
 	public getResults(): EquityResults {

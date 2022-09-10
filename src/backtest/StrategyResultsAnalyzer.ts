@@ -1,5 +1,5 @@
-import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '@src/repository'
-import { Candle } from '@src/types'
+import { Account, Position, PriceHistoryCreateParams, TimeframeType } from '../repository'
+import { Candle } from '../types'
 import { CurrentTestData } from '.'
 import PositionsDrawdown from './calculations/PositionsDrawdown'
 import Equity from './calculations/Equity'
@@ -31,28 +31,24 @@ export interface StrategyResultsWithEntities extends StrategyResults {
 }
 
 export interface StrategyResults {
-	startTime: number // start
-	endTime: number // end
-	daysCount: number // duration
-	timeframe: TimeframeType
-	symbol: string
+	// startTime: number // start
+	// endTime: number // end
+	// daysCount: number // duration
+	// timeframe: TimeframeType
+	// symbol: string
 
-	candleCount: number
-	candleCountInPositions: number // exposure
+	// countCandles: number
+	countCandlesInPositions: number // exposure
 
 	equityEnding: number
 	equityMax: number
 	equityMin: number
-	returnPercent: number
-	returnPercentYearly: number
-	returnPercentAvg: number
-	volatilityPercentYearly: number
 
 	//TRADES
 	drawdownPercentMax: number
 	drawdownPercentAvg: number
 	drawdownDurationMax: number
-	drawdownDurationAvg: number
+	// drawdownDurationAvg: number
 
 	winPercent: number
 	winPercentLong: number
@@ -72,18 +68,11 @@ export interface StrategyResults {
 
 	tradeDurationAvg: number
 	tradeDurationMax: number
-	tradeDurationMin: number
-
-	strategyName: string
-	strategySettings: Record<string, number | string>
-
-	sharpeRatio: number
-	sortinoRatio: number
-	calmarRatio: number
 }
 
 interface StrategyResultsAnalyzerArgs {
-	calculations: Partial<Calculations>
+	calculations?: Partial<Calculations>
+	priceHistory: PriceHistoryCreateParams
 }
 
 interface Calculations {
@@ -115,6 +104,20 @@ export default class StrategyResultsAnalyzer {
 		}
 
 		this.setWatchedCalculations(['drawdown', 'equity', 'tradeStats'])
+	}
+
+	public getResults(): StrategyResults {
+		const { drawdown, equity, tradeStats } = this.calculations
+		const equityResults = equity.getResults()
+		const tradeStatsResults = tradeStats.getResults()
+		const drawdownResults = drawdown.getResults()
+
+		// TODO: To make it clear what is being returned, destructure the results
+		return {
+			...drawdownResults,
+			...tradeStatsResults,
+			...equityResults
+		}
 	}
 
 	public setWatchedCalculations(calculationNames: (keyof Calculations)[]) {
