@@ -9,7 +9,7 @@ import {
 	PriceHistoryCreateParams
 } from '@src/repository'
 import { Strategy } from '@src/types'
-import StrategyResultsAnalyzer from './StrategyResultsAnalyzer'
+import StrategyResultsAnalyzer, { StrategyResults } from './StrategyResultsAnalyzer'
 
 interface BacktesterArgs {
 	startingCash: number
@@ -107,11 +107,12 @@ export default class Backtester {
 		this.entityManager.off('positionRepository.update', 'backtester.handleOpenPosition')
 	}
 
-	public runTest(strategy: Strategy) {
+	public runTest(strategy: Strategy): StrategyResults {
 		const accountRepository = this.entityManager.getRepository('account')
 		const account = accountRepository.create(this.accountSettings)
 		this.client.setAccountId(account.id)
 
+		this.strategyResultsAnalyzer.reset()
 		const startingIndex = this.broker.getTimeline().getTimelineIndex()
 		this.currentTestData = {
 			candles: this.priceHistory.candles,
@@ -144,5 +145,6 @@ export default class Backtester {
 		} while (true)
 
 		this.onTestEnd()
+		return this.strategyResultsAnalyzer.getResults()
 	}
 }

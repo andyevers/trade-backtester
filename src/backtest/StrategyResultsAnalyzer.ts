@@ -156,4 +156,15 @@ export default class StrategyResultsAnalyzer {
 	public handleStart(data: CurrentTestData) {
 		this.watchedCalculationsMap.handleStart.forEach((calculation) => calculation(data))
 	}
+
+	public reset(calculations?: Partial<Calculations>): void {
+		const {
+			drawdown = new PositionsDrawdown(),
+			equity = new Equity(),
+			tradeStats = new TradeStats()
+		} = calculations || {}
+		this.calculations.drawdown = drawdown
+		this.calculations.equity = equity
+		this.calculations.tradeStats = tradeStats
+	}
 }
