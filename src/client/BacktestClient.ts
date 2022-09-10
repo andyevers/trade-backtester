@@ -1,12 +1,12 @@
-import { Broker } from '@src/backtest'
-import { GetCandlesParams } from '@src/repository'
+import { Broker } from '../backtest'
+import { GetCandlesParams } from '../repository'
 import BaseClient, {
 	BaseClientArgs,
 	CloseOrdersParams,
 	FetchPositionsParams,
 	PlaceOrderParams
 } from './BaseClient'
-import { EventBus } from '@src/events'
+import { EventBus } from '../events'
 
 export interface BacktestClientArgs extends BaseClientArgs {
 	broker: Broker

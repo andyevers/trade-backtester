@@ -11,9 +11,9 @@ import {
 	PositionType,
 	PriceHistory,
 	RepositoriesByName
-} from '@src/repository'
-import { Candle } from '@src/types'
-import { EventBus } from '@src/events'
+} from '../repository'
+import { Candle } from '../types'
+import { EventBus } from '../events'
 
 export interface BaseClientArgs {
 	entityManager?: EntityManager

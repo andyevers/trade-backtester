@@ -1,14 +1,14 @@
-import { Candle, CandleBySymbol } from '@src/types'
+import { Candle, CandleBySymbol } from '../types'
 import { Broker } from '.'
-import { BacktestClient } from '@src/client'
+import { BacktestClient } from '../client'
 import {
 	Account,
 	AccountCreateParams,
 	EntityManager,
 	Position,
 	PriceHistoryCreateParams
-} from '@src/repository'
-import { Strategy } from '@src/types'
+} from '../repository'
+import { Strategy } from '../types'
 import StrategyResultsAnalyzer, { StrategyResults } from './StrategyResultsAnalyzer'
 
 interface BacktesterArgs {

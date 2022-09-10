@@ -1,5 +1,5 @@
 import AccountRepository from './AccountRepository'
-import { EventBus } from '@src/events'
+import { EventBus } from '../events'
 import PositionRepository from './PositionRepository'
 import PriceHistoryRepository from './PriceHistoryRepository'
 import TriggerRepository from './TriggerRepository'

@@ -1,7 +1,8 @@
 # Trade Backtester
 
-Create trading strategies and run backtests.
-**Still in development.**
+Create trading strategies and run backtests. **This package is still in development and is not meant to be used in production.**
+
+Contributors welcome: https://github.com/andyevers/trade-backtester
 
 ## Development & Strategy Creation Rules
 

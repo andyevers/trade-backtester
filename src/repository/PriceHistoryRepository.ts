@@ -1,4 +1,4 @@
-import { Candle } from '@src/types'
+import { Candle } from '../types'
 import Repository, { Entity, RepositoryArgs } from './Repository'
 
 export type TimeframeType =

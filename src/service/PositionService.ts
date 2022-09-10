@@ -1,4 +1,4 @@
-import { EntityManager, PositionType, TriggerType, Trigger, Position } from '@src/repository'
+import { EntityManager, PositionType, TriggerType, Trigger, Position } from '../repository'
 
 export interface PositionServiceArgs {
 	entityManager: EntityManager

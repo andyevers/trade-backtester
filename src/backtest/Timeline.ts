@@ -1,5 +1,5 @@
-import { PriceHistoryCreateParams, SymbolTimeframeKey, TimeframeType } from '@src/repository'
-import { Candle, CandleBySymbol } from '@src/types'
+import { PriceHistoryCreateParams, SymbolTimeframeKey, TimeframeType } from '../repository'
+import { Candle, CandleBySymbol } from '../types'
 
 interface CandlesBySymbolTimeframe {
 	[key: SymbolTimeframeKey]: Candle[]

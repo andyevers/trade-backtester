@@ -1,4 +1,4 @@
-import { EntityManager } from '@src/repository'
+import { EntityManager } from '../repository'
 import AccountService from './AccountService'
 import PositionService from './PositionService'
 import TriggerService from './TriggerService'

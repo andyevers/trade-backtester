@@ -1,4 +1,4 @@
-import { BaseClient } from '@src/client'
+import { BaseClient } from './client'
 
 export interface Candle {
 	open: number

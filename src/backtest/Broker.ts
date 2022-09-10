@@ -1,4 +1,4 @@
-import { CandleBySymbol } from '@src/types'
+import { CandleBySymbol } from '../types'
 import {
 	Account,
 	EntityManager,
@@ -10,8 +10,8 @@ import {
 	PositionType,
 	PriceHistory,
 	PriceHistoryCreateParams
-} from '@src/repository'
-import { ServiceManager } from '@src/service'
+} from '../repository'
+import { ServiceManager } from '../service'
 import Timeline, { NewCandleData } from './Timeline'
 
 export interface BrokerArgs {

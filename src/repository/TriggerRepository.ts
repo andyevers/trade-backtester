@@ -1,5 +1,5 @@
-import { PositionTriggerLabel } from '@src/service'
-import { Candle } from '@src/types'
+import { PositionTriggerLabel } from '../service'
+import { Candle } from '../types'
 import Repository, { Entity, RepositoryArgs } from './Repository'
 
 export type TriggerType = 'crossAbove' | 'crossBelow' | 'touchFromAbove' | 'touchFromBelow' | 'immediate'
