@@ -22,8 +22,8 @@ export interface Position<S extends PositionStatus = PositionStatus> extends Ent
 	orderPrice: number
 	orderTime: number
 	orderQty: number
-	orderExitTime: NumberWhen<S, 'OPEN' | 'CLOSED'>
-	orderExitPrice: NumberWhen<S, 'OPEN' | 'CLOSED'>
+	orderExitTime: NumberWhen<S, 'CLOSED'> | S extends 'OPEN' ? number | null : null
+	orderExitPrice: NumberWhen<S, 'CLOSED'> | S extends 'OPEN' ? number | null : null
 	cancelTime: NumberWhen<S, 'CANCELED'>
 	takeProfit: number | null
 	stopLoss: number | null
