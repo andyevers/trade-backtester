@@ -61,7 +61,6 @@ export default class Backtester {
 		this.client = backtestClient
 		this.entityManager = entityManager
 		this.strategyResultsAnalyzer = strategyResultsAnalyzer
-
 		this.priceHistory = priceHistory
 
 		// Add other accountSettings options
@@ -80,6 +79,18 @@ export default class Backtester {
 
 	public getEntityManager(): EntityManager {
 		return this.entityManager
+	}
+
+	public getBroker(): Broker {
+		return this.broker
+	}
+
+	public getClient(): BacktestClient {
+		return this.client
+	}
+
+	public getCurrentTestData(): CurrentTestData {
+		return this.currentTestData
 	}
 
 	private onAfterNext(latestCandles: CandleBySymbol) {
