@@ -110,7 +110,7 @@ export default abstract class Repository<T extends Entity> {
 		return entity as T
 	}
 
-	public import(entity: T): T {
+	public importEntity(entity: T): T {
 		if (this.entitiesById[entity.id]) {
 			throw new Error(
 				`Entity with id ${entity.id} already exists in repository ${this.constructor.name}`

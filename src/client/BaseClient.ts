@@ -131,7 +131,7 @@ export default abstract class BaseClient {
 		if (cachedEntity) {
 			repository.update(cachedEntity.id, entity as any)
 		} else {
-			repository.import(entity as any)
+			repository.importEntity(entity as any)
 		}
 	}
 
