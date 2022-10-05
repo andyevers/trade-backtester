@@ -274,7 +274,7 @@ export default class TriggerRepository extends Repository<Trigger> {
 		const { isActive, symbol } = filters
 		const activeKey = isActive ? 'isActive' : 'isInactive'
 		const bucket = symbol
-			? this.positionTriggersByLabelMap._bySymbol[symbol] || {}
+			? this.positionTriggersByLabelMap._bySymbol[symbol] || { _all: {}, isActive: {}, isInactive: {} }
 			: this.positionTriggersByLabelMap._all
 
 		return typeof isActive === 'undefined' ? bucket._all : bucket[activeKey] || {}
