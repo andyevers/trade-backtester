@@ -11,7 +11,7 @@ import {
 import { Strategy } from '../types'
 import StrategyResultsAnalyzer, { StrategyResults } from './StrategyResultsAnalyzer'
 
-interface BacktesterArgs {
+export interface BacktesterArgs {
 	startingCash: number
 	startTime: number
 	priceHistory: PriceHistoryCreateParams
