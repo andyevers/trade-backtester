@@ -1,6 +1,6 @@
 {
     "name": "trade-backtester",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Run backtest for stock/forex trading strategies",
     "main": "./src/index.ts",
     "author": "Andrew Evers",
